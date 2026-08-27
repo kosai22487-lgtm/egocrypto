@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-md mx-auto px-4 pb-24 text-gray-100">
+    <!-- Header -->
+    <div class="flex items-center justify-between py-4">
+        <button onclick="window.location.href='/'" class="text-gray-400 hover:text-white text-xl">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <h2 class="text-lg font-bold text-white">Profile & Settings</h2>
+        <div class="w-8"></div>
+    </div>
+
+    <!-- Profile Header -->
+    <div class="flex items-center gap-4 bg-[#1E2533] border border-gray-800 rounded-2xl p-4 mb-6">
+        <div class="relative">
+            <div id="profile-avatar" class="w-14 h-14 rounded-full bg-gray-700 border-2 border-teal-500 flex items-center justify-center text-xl text-teal-400 overflow-hidden">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <button onclick="document.getElementById('profile-pic-input').click()" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-teal-600 hover:bg-teal-500 text-gray-950 flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-camera text-[10px]"></i>
+            </button>
+            <input type="file" id="profile-pic-input" accept="image/*" class="hidden" onchange="uploadProfilePic(this)">
+        </div>
+        <div class="flex-1">
+            <div id="real-name-display" class="text-white font-bold text-base">--</div>
+            <div id="username-display" class="text-gray-400 text-sm">@--</div>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-gray-400">
+            <i class="fa-solid fa-qrcode"></i>
+        </div>
+    </div>
+
+    <!-- Refer & Earn Banner -->
+    <div class="bg-[#1E2533] border border-gray-800 rounded-2xl p-5 mb-6 flex justify-between items-center">
+        <div class="text-white font-bold text-base">Refer & Earn $50 USD</div>
+        <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg">
+            <i class="fa-solid fa-coins text-xl"></i>
+        </div>
+    </div>
+
+    <!-- Menu List -->
+    <div id="main-menu" class="space-y-3 mb-8">
+        <button onclick="alert('Referral code feature coming soon')" class="w-full bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between text-white text-sm hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-user-plus text-gray-400"></i> Add Referral Code</div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+        <button onclick="showSection('account')" class="w-full bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between text-white text-sm hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-user text-gray-400"></i> Account</div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+        <button onclick="showSection('security')" class="w-full bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between text-white text-sm hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-shield-halved text-gray-400"></i> Security</div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+        <button onclick="alert('Notifications coming soon')" class="w-full bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between text-white text-sm hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-bell text-gray-400"></i> Notifications</div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+        <button onclick="document.getElementById('app-customization-section').classList.remove('hidden'); document.getElementById('main-menu').classList.add('hidden'); document.getElementById('account-section').classList.add('hidden'); document.getElementById('security-section').classList.add('hidden');" class="w-full bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between text-white text-sm hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-palette text-gray-400"></i> App Customization</div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+        <button onclick="window.location.href='/support'" class="w-full bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between text-white text-sm hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-headset text-gray-400"></i> Support</div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+        <button onclick="openAboutModal()" class="w-full bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between text-white text-sm hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-info-circle text-gray-400"></i> About</div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+    </div>
+
+    <!-- Account Section (Hidden) -->
+    <div id="account-section" class="hidden mb-8 space-y-6">
+        <!-- Profile info display -->
+        <div class="bg-[#12161f] border border-gray-800 rounded-2xl p-5">
+            <h3 class="text-teal-400 font-bold mb-4 text-sm"><i class="fa-solid fa-user-pen mr-2"></i>Profile Information</h3>
+            <div id="profile-info" class="space-y-3 text-sm"></div>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <div class="bg-[#12161f] border border-gray-800 rounded-2xl p-5">
+            <h3 class="text-teal-400 font-bold mb-4 text-sm"><i class="fa-solid fa-pencil mr-2"></i>Edit Profile</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Real Name</label>
+                    <input type="text" id="real-name-input" placeholder="Enter your full name" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-teal-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Email (Gmail)</label>
+                    <input type="email" id="email-input" placeholder="example@gmail.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-teal-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Phone</label>
+                    <input type="tel" id="phone-input" placeholder="+959123456789" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-teal-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">City</label>
+                        <input type="text" id="city-input" placeholder="Yangon" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Country</label>
+                        <input type="text" id="country-input" placeholder="Myanmar" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-teal-500">
+                    </div>
+                </div>
+                <button onclick="updateProfile()" class="w-full bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold py-3 rounded-xl text-sm transition">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="bg-[#12161f] border border-gray-800 rounded-2xl p-5">
+            <h3 class="text-teal-400 font-bold mb-4 text-sm"><i class="fa-solid fa-lock mr-2"></i>Change Password</h3>
+            <div class="space-y-3">
+                <input type="password" id="old-password" placeholder="Old Password" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-teal-500">
+                <input type="password" id="new-password" placeholder="New Password" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-teal-500">
+                <input type="password" id="confirm-password" placeholder="Confirm New Password" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-teal-500">
+                <button onclick="changePassword()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm transition">
+                    Update Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Section (Hidden) -->
+    <div id="security-section" class="hidden mb-8">
+        <h3 class="text-teal-400 font-bold mb-4 text-sm"><i class="fa-solid fa-shield-halved mr-2"></i>Security</h3>
+        <div class="space-y-3">
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-white text-sm font-bold">KYC Verification</span>
+                    <span id="kyc-status-badge" class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30">Not Submitted</span>
+                </div>
+                <div id="kyc-form" class="space-y-3 hidden">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Real Name</label>
+                        <input type="text" id="kyc-real-name" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-white text-sm" placeholder="Your full name">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">ID Number</label>
+                        <input type="text" id="kyc-id-number" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-white text-sm" placeholder="NRC / Passport">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Upload ID Document</label>
+                        <input type="file" id="kyc-document" accept=".png,.jpg,.jpeg,.pdf" class="w-full text-sm text-gray-400">
+                    </div>
+                    <button onclick="submitKYC()" class="w-full bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold py-2.5 rounded-xl text-sm transition">Submit KYC</button>
+                </div>
+                <button onclick="toggleKYCForm()" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2.5 rounded-xl text-sm transition" id="kyc-toggle-btn">Start KYC</button>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">Reset Passcode</span>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">Opening App</span>
+                <label class="switch"><input type="checkbox" id="opening-app-toggle" checked><span class="slider round"></span></label>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">2-Factor Authentication</span>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">Passkeys</span>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">Single Sign-On (SSO)</span>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">Anti-phishing Code</span>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">Account Activity</span>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">Devices</span>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">Derivatives</span>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">Crypto.com Verify</span>
+                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+            </div>
+            <div class="bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-white text-sm">24-Hour Withdrawal Lock</span>
+                <label class="switch"><input type="checkbox" id="withdrawal-lock-toggle"><span class="slider round"></span></label>
+            </div>
+        </div>
+    </div>
+
+    
+<!-- App Customization Section (Hidden) -->
+<div id="app-customization-section" class="hidden mb-8">
+    <button onclick="document.getElementById('app-customization-section').classList.add('hidden'); document.getElementById('main-menu').classList.remove('hidden');" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl text-sm transition mb-4">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Settings
+    </button>
+
+    <h3 class="text-teal-400 font-bold mb-4 text-sm"><i class="fa-solid fa-palette mr-2"></i>App Theme</h3>
+    <div class="space-y-3">
+        <div data-theme-option="light" onclick="setTheme('light')" class="cursor-pointer bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white border border-gray-300"></div>
+                <span class="text-white text-sm">Light Theme</span>
+            </div>
+            <i class="fa-solid fa-check text-teal-400 hidden"></i>
+        </div>
+        <div data-theme-option="black" onclick="setTheme('black')" class="cursor-pointer bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-black border border-gray-500"></div>
+                <span class="text-white text-sm">Black Theme</span>
+            </div>
+            <i class="fa-solid fa-check text-teal-400 hidden"></i>
+        </div>
+        <div data-theme-option="animated" onclick="setTheme('animated')" class="cursor-pointer bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-400"></div>
+                <span class="text-white text-sm">Animated Stars</span>
+            </div>
+            <i class="fa-solid fa-check text-teal-400 hidden"></i>
+        </div>
+        <div data-theme-option="matrix" onclick="setTheme('matrix')" class="cursor-pointer bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-green-500 to-black"></div>
+                <span class="text-white text-sm">Matrix Rain</span>
+            </div>
+            <i class="fa-solid fa-check text-teal-400 hidden"></i>
+        </div>
+        <div data-theme-option="circuit" onclick="setTheme('circuit')" class="cursor-pointer bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-900"></div>
+                <span class="text-white text-sm">Grid Theme</span>
+            </div>
+            <i class="fa-solid fa-check text-teal-400 hidden"></i>
+        </div>
+        <div data-theme-option="electric" onclick="setTheme('electric')" class="cursor-pointer bg-[#1E2533] border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:bg-gray-800/50 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-green-400 to-blue-700"></div>
+                <span class="text-white text-sm">Electric Circuit</span>
+            </div>
+            <i class="fa-solid fa-check text-teal-400 hidden"></i>
+        </div>
+        <!-- Add Theme Button -->
+        <button onclick="window.open('https://egocrypto.com/themes', '_blank')" class="w-full bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-dashed border-purple-500/50 rounded-xl p-4 flex items-center justify-center text-white text-sm hover:bg-purple-500/10 transition">
+            <i class="fa-solid fa-plus mr-2 text-purple-400"></i> Add Theme
+        </button>
+    </div>
+</div>
+
+<!-- Log Out -->
+    <button onclick="window.location.href='/logout'" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-sm transition mb-6">
+        Log Out
+    </button>
+    <p class="text-center text-xs text-gray-500">Egocrypto App Version 1.0.0</p>
+</div>
+
+
+
+<!-- About Egocrypto Modal -->
+<div id="about-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-md w-full max-h-[85vh] overflow-y-auto shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-teal-400"><i class="fa-solid fa-info-circle mr-2"></i>About Egocrypto</h3>
+            <button onclick="closeAboutModal()" class="text-gray-400 hover:text-white transition text-xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="space-y-6 text-sm text-gray-300">
+            <!-- Intro -->
+            <div class="bg-gradient-to-r from-indigo-600/20 to-cyan-500/20 border border-indigo-500/30 rounded-2xl p-5">
+                <h4 class="text-white font-bold text-lg mb-2">Trade Smarter. Move Faster.</h4>
+                <p class="leading-relaxed">Egocrypto is a next-generation trading platform designed to deliver clarity, speed, and confidence to users of all experience levels. Whether you're just starting or a seasoned trader, our ecosystem provides the tools, insights, and security you need to navigate the digital asset space effectively.</p>
+            </div>
+
+            <!-- Vision & Mission -->
+            <div>
+                <h4 class="text-teal-400 font-bold mb-2"><i class="fa-solid fa-bullseye mr-2"></i>Our Vision & Mission</h4>
+                <p class="leading-relaxed mb-2"><strong class="text-white">Vision:</strong> To become the world's most trusted and user-friendly crypto trading platform by combining advanced technology with transparent practices.</p>
+                <p class="leading-relaxed"><strong class="text-white">Mission:</strong> To bridge the gap between complex trading tools and everyday users, providing a balanced experience — clean design, effective tools, and transparent communication.</p>
+            </div>
+
+            <!-- Our Story -->
+            <div>
+                <h4 class="text-teal-400 font-bold mb-2"><i class="fa-solid fa-book-open mr-2"></i>Our Story</h4>
+                <p class="leading-relaxed">Egocrypto was founded with a simple realization: the crypto trading landscape is often either overly complicated for newcomers or overly simplified for professionals. We set out to create a platform that meets in the middle — offering institutional-grade features in a package that anyone can understand and use with confidence. From day one, our focus has been on user experience, security, and continuous innovation.</p>
+            </div>
+
+            <!-- Core Values -->
+            <div>
+                <h4 class="text-teal-400 font-bold mb-3"><i class="fa-solid fa-gem mr-2"></i>Our Core Values</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-emerald-400 mr-2 mt-1"></i><span><strong class="text-white">Accessibility:</strong> Trading should be easy to access and understand for everyone.</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-emerald-400 mr-2 mt-1"></i><span><strong class="text-white">Honesty:</strong> Risk disclosure is always clear, honest, and upfront.</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-emerald-400 mr-2 mt-1"></i><span><strong class="text-white">Efficiency:</strong> Tools are streamlined without unnecessary complexity.</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-emerald-400 mr-2 mt-1"></i><span><strong class="text-white">Security:</strong> We treat security and reliability as non-negotiable foundations.</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-emerald-400 mr-2 mt-1"></i><span><strong class="text-white">Innovation:</strong> We continually integrate AI, machine learning, and blockchain analytics to enhance user experience.</span></li>
+                </ul>
+            </div>
+
+            <!-- Why Choose Egocrypto -->
+            <div>
+                <h4 class="text-teal-400 font-bold mb-3"><i class="fa-solid fa-star mr-2"></i>Why Choose Egocrypto?</h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gray-950 border border-gray-800 rounded-xl p-4">
+                        <i class="fa-solid fa-shield-halved text-cyan-400 text-xl mb-2"></i>
+                        <p class="font-bold text-white text-xs">Secure Vaults</p>
+                        <p class="text-xs text-gray-400 mt-1">Bank-grade encryption and multi-layer asset protection.</p>
+                    </div>
+                    <div class="bg-gray-950 border border-gray-800 rounded-xl p-4">
+                        <i class="fa-solid fa-robot text-indigo-400 text-xl mb-2"></i>
+                        <p class="font-bold text-white text-xs">AI Powered</p>
+                        <p class="text-xs text-gray-400 mt-1">Smart signals, arbitrage opportunities, and predictive analytics.</p>
+                    </div>
+                    <div class="bg-gray-950 border border-gray-800 rounded-xl p-4">
+                        <i class="fa-solid fa-bolt text-yellow-400 text-xl mb-2"></i>
+                        <p class="font-bold text-white text-xs">Lightning Speed</p>
+                        <p class="text-xs text-gray-400 mt-1">Instant execution, real-time data, and low latency.</p>
+                    </div>
+                    <div class="bg-gray-950 border border-gray-800 rounded-xl p-4">
+                        <i class="fa-solid fa-user-shield text-emerald-400 text-xl mb-2"></i>
+                        <p class="font-bold text-white text-xs">Transparent</p>
+                        <p class="text-xs text-gray-400 mt-1">No hidden fees, clear risk disclosure, and open communication.</p>
+                    </div>
+                    <div class="bg-gray-950 border border-gray-800 rounded-xl p-4">
+                        <i class="fa-solid fa-chart-line text-blue-400 text-xl mb-2"></i>
+                        <p class="font-bold text-white text-xs">Advanced Tools</p>
+                        <p class="text-xs text-gray-400 mt-1">TradingView integration, real-time charts, and market analysis.</p>
+                    </div>
+                    <div class="bg-gray-950 border border-gray-800 rounded-xl p-4">
+                        <i class="fa-solid fa-headset text-purple-400 text-xl mb-2"></i>
+                        <p class="font-bold text-white text-xs">24/7 Support</p>
+                        <p class="text-xs text-gray-400 mt-1">Dedicated customer service via Telegram and WhatsApp.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technology & Security -->
+            <div>
+                <h4 class="text-teal-400 font-bold mb-2"><i class="fa-solid fa-lock mr-2"></i>Technology & Security</h4>
+                <p class="leading-relaxed">We employ state-of-the-art encryption (AES-256), cold storage for digital assets, two-factor authentication (2FA), and continuous monitoring to protect your funds and data. Our infrastructure is built on scalable cloud architecture, ensuring 99.9% uptime and rapid transaction processing.</p>
+            </div>
+
+            <!-- Products & Services -->
+            <div>
+                <h4 class="text-teal-400 font-bold mb-2"><i class="fa-solid fa-cubes mr-2"></i>Products & Services</h4>
+                <ul class="space-y-2">
+                    <li><i class="fa-solid fa-arrow-trend-up text-emerald-400 mr-2"></i><strong class="text-white">Spot Trading:</strong> Buy and sell crypto with real-time market prices.</li>
+                    <li><i class="fa-solid fa-robot text-indigo-400 mr-2"></i><strong class="text-white">AI Arbitrage:</strong> Earn passive income through automated arbitrage strategies.</li>
+                    <li><i class="fa-solid fa-wallet text-cyan-400 mr-2"></i><strong class="text-white">Secure Wallet:</strong> Multi-coin wallet with deposit and withdrawal management.</li>
+                    <li><i class="fa-solid fa-chart-pie text-yellow-400 mr-2"></i><strong class="text-white">Portfolio Tracking:</strong> Monitor your assets and performance in real-time.</li>
+                </ul>
+            </div>
+
+            <!-- Roadmap -->
+            <div>
+                <h4 class="text-teal-400 font-bold mb-2"><i class="fa-solid fa-road mr-2"></i>Roadmap</h4>
+                <ul class="space-y-2">
+                    <li class="flex items-start"><i class="fa-solid fa-circle-check text-emerald-400 mr-2 mt-1"></i>Q1 2026 – Mobile App Launch (iOS & Android)</li>
+                    <li class="flex items-start"><i class="fa-solid fa-circle-check text-emerald-400 mr-2 mt-1"></i>Q2 2026 – DeFi Integration & Staking</li>
+                    <li class="flex items-start"><i class="fa-solid fa-circle-check text-emerald-400 mr-2 mt-1"></i>Q3 2026 – Global Expansion & Multi-language Support</li>
+                    <li class="flex items-start"><i class="fa-solid fa-circle-check text-emerald-400 mr-2 mt-1"></i>Q4 2026 – Institutional-Grade Trading Terminal</li>
+                </ul>
+            </div>
+
+            <!-- Community & Support -->
+            <div>
+                <h4 class="text-teal-400 font-bold mb-2"><i class="fa-solid fa-users mr-2"></i>Community & Support</h4>
+                <p class="leading-relaxed">Join thousands of traders in our growing community. Get real-time support through our official Telegram and WhatsApp channels. Our team is available 24/7 to assist you with any questions or issues.</p>
+            </div>
+
+            <!-- Risk Disclosure -->
+            <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                <h4 class="text-yellow-400 font-bold mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Risk Disclosure</h4>
+                <p class="text-xs leading-relaxed">Trading cryptocurrencies involves significant risk and may result in the loss of your invested capital. Past performance is not indicative of future results. Please ensure you fully understand the risks before trading.</p>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="text-center text-gray-400 text-xs space-y-1 border-t border-gray-800 pt-4">
+                <p><i class="fa-solid fa-envelope mr-1"></i> support@egocrypto.com</p>
+                <p><i class="fa-solid fa-globe mr-1"></i> www.egocrypto.com</p>
+                <p class="text-gray-500 mt-2">Egocrypto App v1.0.0</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function openAboutModal() {
+    document.getElementById('about-modal').classList.remove('hidden');
+}
+function closeAboutModal() {
+    document.getElementById('about-modal').classList.add('hidden');
+}
+</script>
+
+<script>
+    let currentUser = null;
+
+    // Show/hide sections
+    function showSection(section) {
+        const mainMenu = document.getElementById('main-menu');
+        document.getElementById('account-section').classList.add('hidden');
+        document.getElementById('security-section').classList.add('hidden');
+        if (section === 'account') {
+            document.getElementById('account-section').classList.remove('hidden');
+            mainMenu.classList.add('hidden');
+        } else if (section === 'security') {
+            document.getElementById('security-section').classList.remove('hidden');
+            mainMenu.classList.add('hidden');
+        } else {
+            // Show main menu
+            mainMenu.classList.remove('hidden');
+        }
+    }
+
+    function loadProfile() {
+        fetch('/api/user/profile')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    currentUser = data.user;
+                    if (currentUser.profile_pic) {
+                        document.getElementById('profile-avatar').innerHTML = `<img src="${currentUser.profile_pic}" class="w-full h-full object-cover">`;
+                    }
+                    document.getElementById('real-name-display').innerText = currentUser.real_name || 'Not set';
+                    document.getElementById('username-display').innerText = '@' + currentUser.username;
+
+                    document.getElementById('profile-info').innerHTML = `
+                        <div class="flex justify-between"><span class="text-gray-400">User ID</span><span class="text-white font-semibold">${currentUser.id}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Username</span><span class="text-white font-semibold">${currentUser.username}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Email</span><span class="text-white font-semibold">${currentUser.email}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Deposit Limit</span><span class="text-white font-semibold">$${currentUser.deposit_limit}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Withdraw Limit</span><span class="text-white font-semibold">$${currentUser.withdraw_limit}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Status</span><span class="text-emerald-400 font-semibold">${currentUser.status}</span></div>
+                    `;
+
+                    document.getElementById('real-name-input').value = currentUser.real_name || '';
+                    document.getElementById('email-input').value = currentUser.email || '';
+                    document.getElementById('phone-input').value = currentUser.phone || '';
+                    document.getElementById('city-input').value = currentUser.city || '';
+                    document.getElementById('country-input').value = currentUser.country || '';
+                }
+            });
+    }
+
+    function uploadProfilePic(input) {
+        if (input.files.length === 0) return;
+        const file = input.files[0];
+        const formData = new FormData();
+        formData.append('profile_pic', file);
+        fetch('/api/user/upload-profile-pic', { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) loadProfile();
+    loadKYCStatus();
+            });
+    }
+
+    function updateProfile() {
+        const real_name = document.getElementById('real-name-input').value.trim();
+        const email = document.getElementById('email-input').value.trim();
+        const phone = document.getElementById('phone-input').value.trim();
+        const city = document.getElementById('city-input').value.trim();
+        const country = document.getElementById('country-input').value.trim();
+        fetch('/api/user/update-profile', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ real_name, email, phone, city, country })
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) loadProfile();
+    loadKYCStatus();
+        });
+    }
+
+    function changePassword() {
+        const old_password = document.getElementById('old-password').value;
+        const new_password = document.getElementById('new-password').value;
+        const confirm_password = document.getElementById('confirm-password').value;
+        if (new_password !== confirm_password) { alert('New passwords do not match'); return; }
+        fetch('/api/user/change-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ old_password, new_password })
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) {
+                document.getElementById('old-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+            }
+        });
+    }
+
+    loadProfile();
+    loadKYCStatus();
+</script>
+{% endblock %}

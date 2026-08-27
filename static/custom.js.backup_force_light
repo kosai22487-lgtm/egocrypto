@@ -1,0 +1,373 @@
+
+// Theme Manager
+(function(){
+    const validThemes = ['light', 'black', 'animated', 'matrix', 'circuit', 'electric'];
+    const DEFAULT_THEME = 'animated';
+
+    function getTheme() {
+        return localStorage.getItem('egocrypto_theme') || DEFAULT_THEME;
+    }
+
+    function applyTheme(theme) {
+        if (!validThemes.includes(theme)) theme = DEFAULT_THEME;
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('egocrypto_theme', theme);
+
+        // Particle canvas & blobs
+        const particleCanvas = document.getElementById('particle-canvas');
+        const blobs = document.querySelectorAll('.background-blob');
+        if (theme === 'animated') {
+            if (particleCanvas) particleCanvas.style.display = 'block';
+            blobs.forEach(b => b.style.display = 'block');
+        } else {
+            if (particleCanvas) particleCanvas.style.display = 'none';
+            blobs.forEach(b => b.style.display = 'none');
+        }
+
+        // Matrix canvas
+        if (theme === 'matrix') {
+            startMatrix();
+        } else {
+            stopMatrix();
+        }
+    }
+
+    window.setTheme = function(theme) {
+        applyTheme(theme);
+        updateThemeSelectionUI();
+    };
+
+    function updateThemeSelectionUI() {
+        const current = getTheme();
+        document.querySelectorAll('[data-theme-option]').forEach(el => {
+            const val = el.getAttribute('data-theme-option');
+            const checkIcon = el.querySelector('i.fa-check');
+            if (val === current) {
+                el.classList.add('border-teal-500', 'bg-teal-500/20');
+                if (checkIcon) checkIcon.classList.remove('hidden');
+            } else {
+                el.classList.remove('border-teal-500', 'bg-teal-500/20');
+                if (checkIcon) checkIcon.classList.add('hidden');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        applyTheme(getTheme());
+        updateThemeSelectionUI();
+    });
+})();
+
+// ===== Particle Background (Animated Stars) =====
+function initParticles() {
+    if (document.getElementById('particle-canvas')) return;
+    const theme = localStorage.getItem('egocrypto_theme') || 'animated';
+    if (theme !== 'animated') return;
+
+    const canvas = document.createElement('canvas');
+    canvas.id = 'particle-canvas';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    let width, height, particles = [];
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.size = Math.random() * 1.5 + 0.5;
+            this.speedY = Math.random() * 0.5 + 0.1;
+            this.speedX = Math.random() * 0.2 - 0.1;
+            this.opacity = Math.random() * 0.5 + 0.2;
+        }
+        update() {
+            this.y -= this.speedY;
+            this.x += this.speedX;
+            if (this.y < -10 || this.x < -10 || this.x > width + 10) this.reset();
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < 40; i++) particles.push(new Particle());
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
+
+// ===== Matrix Rain Effect =====
+let matrixCanvas, matrixCtx, matrixAnimationId = null;
+const matrixChars = 'アカサタナハマヤラワ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const matrixFontSize = 14;
+let matrixColumns, matrixDrops;
+
+function initMatrixCanvas() {
+    matrixCanvas = document.createElement('canvas');
+    matrixCanvas.id = 'matrix-canvas';
+    matrixCanvas.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none;';
+    document.body.appendChild(matrixCanvas);
+    matrixCtx = matrixCanvas.getContext('2d');
+
+    function resizeMatrix() {
+        matrixCanvas.width = window.innerWidth;
+        matrixCanvas.height = window.innerHeight;
+        matrixColumns = Math.floor(matrixCanvas.width / matrixFontSize);
+        matrixDrops = Array(matrixColumns).fill(1);
+    }
+    resizeMatrix();
+    window.addEventListener('resize', resizeMatrix);
+}
+
+function drawMatrix() {
+    matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+    matrixCtx.fillStyle = '#0F0';
+    matrixCtx.font = matrixFontSize + 'px monospace';
+
+    for (let i = 0; i < matrixDrops.length; i++) {
+        const text = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
+        matrixCtx.fillText(text, i * matrixFontSize, matrixDrops[i] * matrixFontSize);
+        if (matrixDrops[i] * matrixFontSize > matrixCanvas.height && Math.random() > 0.975) {
+            matrixDrops[i] = 0;
+        }
+        matrixDrops[i]++;
+    }
+}
+
+function animateMatrix() {
+    drawMatrix();
+    matrixAnimationId = requestAnimationFrame(animateMatrix);
+}
+
+function startMatrix() {
+    if (!matrixCanvas) initMatrixCanvas();
+    matrixCanvas.style.display = 'block';
+    if (!matrixAnimationId) animateMatrix();
+}
+
+function stopMatrix() {
+    if (matrixAnimationId) {
+        cancelAnimationFrame(matrixAnimationId);
+        matrixAnimationId = null;
+    }
+    if (matrixCanvas) matrixCanvas.style.display = 'none';
+}
+
+// ===== Add floating blobs (only for animated theme) =====
+document.addEventListener('DOMContentLoaded', () => {
+    const theme = localStorage.getItem('egocrypto_theme') || 'animated';
+    if (theme === 'animated') {
+        initParticles();
+        if (!document.querySelector('.background-blob')) {
+            const blobDiv = document.createElement('div');
+            blobDiv.innerHTML = `<div class="background-blob blob-1"></div><div class="background-blob blob-2"></div><div class="background-blob blob-3"></div>`;
+            document.body.appendChild(blobDiv);
+        }
+    }
+    if (theme === 'matrix') {
+        startMatrix();
+    }
+    // Electric theme: do nothing (solid black background handled by CSS)
+});
+
+// Smooth view switching (fade) for index.html
+if (typeof switchTab === 'function') {
+    const originalSwitch = switchTab;
+    window.switchTab = function(tab) {
+        const main = document.querySelector('main');
+        if (main) {
+            main.style.transition = 'opacity 0.3s';
+            main.style.opacity = '0';
+            setTimeout(() => {
+                originalSwitch(tab);
+                main.style.opacity = '1';
+            }, 300);
+        } else {
+            originalSwitch(tab);
+        }
+    };
+}
+
+
+// ===== Electric Circuit Canvas =====
+let electricCanvas, electricCtx, electricAnimationId = null;
+let electricTraces = [];
+let electricPulses = [];
+
+function initElectricCanvas() {
+    electricCanvas = document.createElement('canvas');
+    electricCanvas.id = 'electric-canvas';
+    electricCanvas.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none;';
+    document.body.appendChild(electricCanvas);
+    electricCtx = electricCanvas.getContext('2d');
+
+    function resizeElectric() {
+        electricCanvas.width = window.innerWidth;
+        electricCanvas.height = window.innerHeight;
+        generateElectricTraces();
+        initElectricPulses();
+    }
+    resizeElectric();
+    window.addEventListener('resize', resizeElectric);
+}
+
+function generateElectricTraces() {
+    electricTraces = [];
+    const width = electricCanvas.width;
+    const height = electricCanvas.height;
+    // IC chip position (center)
+    const chipX = width / 2;
+    const chipY = height / 2;
+    const chipW = 80;
+    const chipH = 80;
+    // Number of traces
+    const numTraces = 24;
+
+    for (let i = 0; i < numTraces; i++) {
+        // Start from random point on chip edge
+        const side = i % 4;
+        let startX, startY;
+        switch(side) {
+            case 0: // top
+                startX = chipX - chipW/2 + Math.random() * chipW;
+                startY = chipY - chipH/2;
+                break;
+            case 1: // right
+                startX = chipX + chipW/2;
+                startY = chipY - chipH/2 + Math.random() * chipH;
+                break;
+            case 2: // bottom
+                startX = chipX - chipW/2 + Math.random() * chipW;
+                startY = chipY + chipH/2;
+                break;
+            case 3: // left
+                startX = chipX - chipW/2;
+                startY = chipY - chipH/2 + Math.random() * chipH;
+                break;
+        }
+
+        // End point at outer edge
+        let endX, endY;
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.max(width, height) * 0.7;
+        endX = Math.cos(angle) * radius + chipX;
+        endY = Math.sin(angle) * radius + chipY;
+
+        // Create path with right-angle bends
+        const points = [{x: startX, y: startY}];
+        let currentX = startX;
+        let currentY = startY;
+        // Decide direction: first move horizontally then vertically or vice versa
+        if (Math.random() > 0.5) {
+            // Horizontal then vertical
+            const midX = currentX + (endX - currentX) * (0.3 + Math.random() * 0.4);
+            points.push({x: midX, y: currentY});
+            points.push({x: midX, y: endY});
+        } else {
+            const midY = currentY + (endY - currentY) * (0.3 + Math.random() * 0.4);
+            points.push({x: currentX, y: midY});
+            points.push({x: endX, y: midY});
+        }
+        points.push({x: endX, y: endY});
+        electricTraces.push(points);
+    }
+}
+
+function initElectricPulses() {
+    electricPulses = [];
+    const numPulses = 8;
+    for (let i = 0; i < numPulses; i++) {
+        electricPulses.push({
+            traceIndex: Math.floor(Math.random() * electricTraces.length),
+            t: Math.random()
+        });
+    }
+}
+
+function drawElectric() {
+    electricCtx.clearRect(0, 0, electricCanvas.width, electricCanvas.height);
+
+    // Draw IC chip
+    const chipX = electricCanvas.width / 2;
+    const chipY = electricCanvas.height / 2;
+    electricCtx.fillStyle = '#1a1a1a';
+    electricCtx.fillRect(chipX - 40, chipY - 40, 80, 80);
+    electricCtx.strokeStyle = '#00ccff';
+    electricCtx.lineWidth = 2;
+    electricCtx.strokeRect(chipX - 40, chipY - 40, 80, 80);
+
+    // Draw traces
+    electricCtx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+    electricCtx.lineWidth = 1.5;
+    for (const trace of electricTraces) {
+        electricCtx.beginPath();
+        electricCtx.moveTo(trace[0].x, trace[0].y);
+        for (let i = 1; i < trace.length; i++) {
+            electricCtx.lineTo(trace[i].x, trace[i].y);
+        }
+        electricCtx.stroke();
+    }
+
+    // Draw pulses
+    for (const pulse of electricPulses) {
+        const trace = electricTraces[pulse.traceIndex];
+        if (!trace) continue;
+        // Interpolate along polyline
+        const totalLength = trace.length - 1;
+        const idx = Math.floor(pulse.t * totalLength);
+        if (idx >= totalLength) idx = totalLength - 1;
+        const frac = pulse.t * totalLength - idx;
+        const p1 = trace[idx];
+        const p2 = trace[idx + 1];
+        const x = p1.x + (p2.x - p1.x) * frac;
+        const y = p1.y + (p2.y - p1.y) * frac;
+
+        // Glow dot
+        electricCtx.beginPath();
+        electricCtx.arc(x, y, 3, 0, Math.PI * 2);
+        electricCtx.fillStyle = '#00ffcc';
+        electricCtx.fill();
+        electricCtx.beginPath();
+        electricCtx.arc(x, y, 8, 0, Math.PI * 2);
+        electricCtx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+        electricCtx.fill();
+
+        // Move pulse
+        pulse.t += 0.005;
+        if (pulse.t > 1) pulse.t = 0;
+    }
+}
+
+function animateElectric() {
+    drawElectric();
+    electricAnimationId = requestAnimationFrame(animateElectric);
+}
+
+function startElectric() {
+    if (!electricCanvas) initElectricCanvas();
+    electricCanvas.style.display = 'block';
+    if (!electricAnimationId) animateElectric();
+}
+
+function stopElectric() {
+    if (electricAnimationId) {
+        cancelAnimationFrame(electricAnimationId);
+        electricAnimationId = null;
+    }
+    if (electricCanvas) electricCanvas.style.display = 'none';
+}

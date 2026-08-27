@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center bg-gray-900 border border-gray-800 p-5 rounded-2xl shadow-xl">
+            <div>
+                <h1 class="text-xl font-bold text-teal-400">Admin Management Control Dashboard</h1>
+                <p class="text-xs text-gray-400">Manage users, credentials, balances, trade outcomes, and requests</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="history.back()" class="bg-gray-700/60 text-gray-300 border border-gray-700 hover:bg-gray-700 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i> Back
+                </button>
+                <a href="/admin/logout" class="bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition">
+                    <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Tab Navigation (4 tabs) -->
+        <div class="flex space-x-1 bg-gray-900 rounded-xl p-1">
+            <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn flex-1 py-2.5 text-sm font-bold rounded-lg bg-teal-600 text-gray-950 transition">Settings</button>
+            <button onclick="switchTab('users')" id="tab-users" class="tab-btn relative flex-1 py-2.5 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition">
+                User Management
+                <span id="badge-users" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">!</span>
+            </button>
+            <button onclick="switchTab('deposit-withdraw')" id="tab-deposit-withdraw" class="tab-btn relative flex-1 py-2.5 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition">
+                Deposits & Withdrawals
+                <span id="badge-deposit-withdraw" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">!</span>
+            </button>
+            <button onclick="switchTab('chat')" id="tab-chat" class="tab-btn relative flex-1 py-2.5 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition">
+                Customer Chat
+                <span id="badge-chat" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">!</span>
+            </button>
+        </div>
+
+        <!-- Page 1: Settings -->
+        <div id="page-settings" class="space-y-6">
+            <!-- Deposit Addresses -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-wallet mr-2"></i>Deposit Addresses</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {% for coin in ['BTC', 'ETH', 'USDT'] %}
+                    <div class="bg-gray-950 border border-gray-700 rounded-xl p-4">
+                        <div class="text-white font-bold mb-2">{{ coin }}</div>
+                        {% set current_addr = addresses[coin] if addresses and coin in addresses else '' %}
+                        <div class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-500 mb-2 truncate">{{ current_addr if current_addr else 'Not set' }}</div>
+                        <button type="button" class="w-full bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold py-1.5 rounded-lg text-xs" onclick="openDepositAddressModal('{{ coin }}', '{{ current_addr }}')">Update</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Customer Service Settings -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-headset mr-2"></i>Customer Service Settings</h3>
+                <div class="space-y-4 max-w-md">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Telegram Link</label>
+                        <div id="display-telegram-link" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-500">Loading...</div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">WhatsApp Number</label>
+                        <div id="display-whatsapp-number" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-500">Loading...</div>
+                    </div>
+                    <button type="button" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold py-2.5 rounded-xl text-sm w-full max-w-xs" onclick="openCustomerServiceModal()">Edit</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 2: User Management -->
+        <div id="page-users" class="hidden space-y-6">
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-4 border-b border-gray-800 font-bold text-sm text-teal-400 flex items-center justify-between flex-wrap gap-3">
+                    <span><i class="fa-solid fa-users mr-2"></i> Registered Platform Users & Management</span>
+                    <span class="text-xs text-gray-400 font-sans">Total Users: {{ users|length if users else 0 }}</span>
+                </div>
+                <!-- ID Search -->
+                <div class="p-3 bg-gray-950/50 border-b border-gray-800 flex items-center gap-2 flex-wrap">
+                    <label class="text-xs text-gray-400 font-semibold whitespace-nowrap">Search by ID:</label>
+                    <input type="number" id="user-id-search-input" placeholder="Enter User ID" min="1" class="bg-gray-950 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 w-32">
+                    <button onclick="filterUserById()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold px-3 py-1.5 rounded-lg text-xs transition">Search</button>
+                    <button onclick="showAllUsers()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition">Show All</button>
+                    <button id="back-button" onclick="history.back()" class="hidden bg-gray-700/60 text-gray-300 border border-gray-700 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Back
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-gray-950 text-gray-400 uppercase font-semibold border-b border-gray-800 tracking-wider">
+                            <tr>
+                                <th class="p-3">ID</th>
+                                <th class="p-3">Username</th>
+                                <th class="p-3">Gmail Address</th>
+                                <th class="p-3">Country</th>
+                                <th class="p-3">Phone</th>
+                                <th class="p-3">Login Date/Time</th>
+                                <th class="p-3">Last Online</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">IP Address</th>
+                                <th class="p-3">USDT Balance</th>
+                                <th class="p-3">Trades</th>
+                                <th class="p-3">Trade Control</th>
+                                <th class="p-3">Balance Management</th>
+                                <th class="p-3">Password Reset</th>
+                                <th class="p-3">Account Status</th>
+                                <th class="p-3">Account Deleted</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800 font-mono">
+                            {% for u in users %}
+                            <tr class="user-row hover:bg-gray-800/40 transition {% if u.account_status == 'frozen' %}bg-pink-500/20{% endif %}" data-user-id="{{ u.id }}">
+                                <!-- ID -->
+                                <td class="p-3">
+                                    <span class="text-teal-400 font-bold">{{ u.id }}</span>
+                                </td>
+                                <!-- Username -->
+                                <td class="p-3">
+                                    <span class="text-white font-sans font-semibold">{{ u.username }}</span>
+                                </td>
+                                <!-- Email -->
+                                <td class="p-3 text-gray-400 font-sans">{{ u.email }}</td>
+                                <td class="p-3 text-gray-400 font-sans">{{ u.country if u.country else '-' }}</td>
+                                <td class="p-3 text-gray-400 font-sans">{{ u.phone if u.phone else '-' }}</td>
+                                <!-- Login Date Time -->
+                                <td class="p-3 text-gray-400 text-[11px]">{{ u.login_time if u.login_time else '-' }}</td>
+                                <!-- Last Online -->
+                                <td class="p-3 text-gray-400 text-[11px]">{{ u.last_online if u.last_online else '-' }}</td>
+                                <!-- Status -->
+                                <td class="p-3">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] {{ 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' if u.status == 'Online' else 'bg-gray-800 text-gray-400 border border-gray-700' }}">
+                                        {{ u.status if u.status else 'Offline' }}
+                                    </span>
+                                </td>
+                                <!-- IP Address -->
+                                <td class="p-3 text-[11px] text-gray-400">{{ u.ip_address if u.ip_address else '127.0.0.1' }}</td>
+                                <!-- USDT Balance -->
+                                <td class="p-3 text-emerald-400 font-bold">${{ "%.2f"|format(u.usdt_balance if u.usdt_balance is defined else (u.balance if u.balance is defined else 0.0)) }}</td>
+                                <td class="p-3 text-white font-bold">{{ u.trade_count if u.trade_count is defined else 0 }}</td>
+                                
+                                <!-- Trade Outcome Control Form -->
+                                <td class="p-3">
+                                    <form method="POST" class="flex items-center space-x-1">
+                                        <input type="hidden" name="action" value="set_result">
+                                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                                        <select name="forced_result" class="bg-gray-950 border border-gray-700 rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-teal-500 font-sans">
+                                            <option value="auto" {{ 'selected' if u.forced_result == 'auto' }}>Auto</option>
+                                            <option value="win" {{ 'selected' if u.forced_result == 'win' }}>Win 🟢</option>
+                                            <option value="loss" {{ 'selected' if u.forced_result == 'loss' }}>Loss 🔴</option>
+                                        </select>
+                                        <button type="submit" class="bg-teal-600 hover:bg-teal-500 text-gray-950 px-2 py-1 rounded-lg font-bold transition text-[10px] font-sans">
+                                            Set
+                                        </button>
+                                    </form>
+                                </td>
+
+                                <!-- Balance Management -->
+                                <td class="p-3">
+                                    <form method="POST" class="flex items-center space-x-1">
+                                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                                        <input type="number" step="0.01" name="amount" placeholder="Amt" required class="w-16 bg-gray-950 border border-gray-700 px-2 py-1 rounded-lg text-xs text-white focus:outline-none">
+                                        <button type="submit" name="action" value="add_balance" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-2 py-1 rounded-lg text-[10px] font-bold transition font-sans" title="Add Balance">
+                                            + Add
+                                        </button>
+                                        <button type="submit" name="action" value="take_balance" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white px-2 py-1 rounded-lg text-[10px] font-bold transition font-sans" title="Take Balance">
+                                            - Take
+                                        </button>
+                                    </form>
+                                </td>
+
+                                <!-- Password Reset -->
+                                <td class="p-3">
+                                    <form method="POST" class="flex items-center space-x-1">
+                                        <input type="hidden" name="action" value="reset_password">
+                                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                                        <input type="text" name="new_password" placeholder="New Pass" required class="w-20 bg-gray-950 border border-gray-700 px-2 py-1 rounded-lg text-xs text-white focus:outline-none font-sans">
+                                        <button type="submit" class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-2.5 py-1 rounded-lg text-[10px] font-bold transition font-sans" title="Reset Password">
+                                            Reset
+                                        </button>
+                                    </form>
+                                </td>
+
+                                <!-- Account Status (Freeze/Unfreeze) -->
+                                <td class="p-3">
+                                    {% if u.account_status == 'frozen' %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30">Frozen</span>
+                                    <form method="POST" class="mt-1">
+                                        <input type="hidden" name="action" value="unfreeze_account">
+                                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                                        <button type="submit" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-2 py-1 rounded-lg text-[10px] font-bold">Unfreeze</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Active</span>
+                                    <form method="POST" class="mt-1">
+                                        <input type="hidden" name="action" value="freeze_account">
+                                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                                        <button type="submit" class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-2 py-1 rounded-lg text-[10px] font-bold">Freeze</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Account Deleted (Delete button) -->
+                                <td class="p-3">
+                                    <form method="POST" onsubmit="return confirm('Are you sure you want to delete this account and all associated data?');">
+                                        <input type="hidden" name="action" value="delete_account">
+                                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                                        <button type="submit" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white px-2 py-1 rounded-lg text-[10px] font-bold">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 3: Deposits & Withdrawals -->
+        <div id="page-deposit-withdraw" class="hidden space-y-6">
+            <!-- Deposit Requests History -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-arrow-down mr-2"></i>Deposit Requests History</h3>
+                <div class="mb-4 flex items-center gap-2 flex-wrap">
+                    <label class="text-xs text-gray-400 font-semibold">Search by User ID:</label>
+                    <input type="number" id="deposit-user-id-search" placeholder="Enter User ID" min="1" class="bg-gray-950 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 w-32">
+                    <button onclick="filterDepositByUserId()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold px-3 py-1.5 rounded-lg text-xs transition">Search</button>
+                    <button onclick="showAllDeposit()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition">Show All</button>
+                </div>
+                {% if deposit_requests %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-950 text-gray-400 uppercase">
+                            <tr>
+                                <th class="p-2">No.</th>
+                                <th class="p-2">User ID</th>
+                                <th class="p-2">Coin</th>
+                                <th class="p-2">Amount</th>
+                                <th class="p-2">TX Hash</th>
+                                <th class="p-2">Date & Time</th>
+                                <th class="p-2">Status</th>
+                                <th class="p-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            {% for req in deposit_requests %}
+                            <tr class="deposit-row hover:bg-gray-800/40" data-user-id="{{ req.user_id }}">
+                                <td class="p-2">{{ req.id }}</td>
+                                <td class="p-2">{{ req.user_id }}</td>
+                                <td class="p-2">{{ req.coin }}</td>
+                                <td class="p-2 text-emerald-400">${{ "%.2f"|format(req.amount) }}</td>
+                                <td class="p-2 font-mono text-xs truncate max-w-xs">{{ req.tx_hash }}</td>
+                                <td class="p-2 text-gray-400 text-[11px]">{{ req.created_at }}</td>
+                                <td class="p-2">
+                                    {% if req.status == 'approved' %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Approved</span>
+                                    {% elif req.status == 'rejected' %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30">Rejected</span>
+                                    {% else %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="p-2">
+                                    {% if req.status == 'pending' %}
+                                    <div class="flex gap-1">
+                                        <form method="POST" action="/admin/approve-deposit/{{ req.id }}">
+                                            <button type="submit" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-3 py-1 rounded-lg text-xs font-bold">Approve</button>
+                                        </form>
+                                        <form method="POST" action="/admin/reject-deposit/{{ req.id }}">
+                                            <button type="submit" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white px-3 py-1 rounded-lg text-xs font-bold">Reject</button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-gray-600">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm text-center py-4">No deposit requests found.</p>
+                {% endif %}
+            </div>
+
+            <!-- Withdrawal Requests History -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-arrow-up mr-2"></i>Withdrawal Requests History</h3>
+                <div class="mb-4 flex items-center gap-2 flex-wrap">
+                    <label class="text-xs text-gray-400 font-semibold">Search by User ID:</label>
+                    <input type="number" id="withdraw-user-id-search" placeholder="Enter User ID" min="1" class="bg-gray-950 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-teal-500 w-32">
+                    <button onclick="filterWithdrawByUserId()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold px-3 py-1.5 rounded-lg text-xs transition">Search</button>
+                    <button onclick="showAllWithdraw()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition">Show All</button>
+                </div>
+                {% if withdraw_requests %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-950 text-gray-400 uppercase">
+                            <tr>
+                                <th class="p-2">No.</th>
+                                <th class="p-2">User ID</th>
+                                <th class="p-2">Coin</th>
+                                <th class="p-2">Amount</th>
+                                <th class="p-2">Address</th>
+                                <th class="p-2">Date & Time</th>
+                                <th class="p-2">Status</th>
+                                <th class="p-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            {% for req in withdraw_requests %}
+                            <tr class="withdraw-row hover:bg-gray-800/40" data-user-id="{{ req.user_id }}">
+                                <td class="p-2">{{ req.id }}</td>
+                                <td class="p-2">{{ req.user_id }}</td>
+                                <td class="p-2">{{ req.coin }}</td>
+                                <td class="p-2 text-emerald-400">${{ "%.2f"|format(req.amount) }}</td>
+                                <td class="p-2 font-mono text-xs truncate max-w-xs">{{ req.address }}</td>
+                                <td class="p-2 text-gray-400 text-[11px]">{{ req.created_at }}</td>
+                                <td class="p-2">
+                                    {% if req.status == 'approved' %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Approved</span>
+                                    {% elif req.status == 'rejected' %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30">Rejected</span>
+                                    {% else %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="p-2">
+                                    {% if req.status == 'pending' %}
+                                    <div class="flex gap-1">
+                                        <form method="POST" action="/admin/approve-withdraw/{{ req.id }}">
+                                            <button type="submit" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-3 py-1 rounded-lg text-xs font-bold">Approve</button>
+                                        </form>
+                                        <form method="POST" action="/admin/reject-withdraw/{{ req.id }}">
+                                            <button type="submit" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white px-3 py-1 rounded-lg text-xs font-bold">Reject</button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-gray-600">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm text-center py-4">No withdrawal requests found.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Page 4: Customer Chat -->
+        <div id="page-chat" class="hidden">
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-comments mr-2"></i>Customer Chat</h3>
+                <div class="mb-4">
+                    <label class="block text-xs text-gray-400 mb-1">Select User</label>
+                    <select id="chat-user-select" onchange="loadAdminChatMessages()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500">
+                        <option value="">-- Select User --</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}" {% if (unread_counts is defined and unread_counts.get(u.id, 0) > 0) %}style="color: red;"{% endif %}>
+                            {{ u.username }} (ID: {{ u.id }})
+                            {% if (unread_counts is defined and unread_counts.get(u.id, 0) > 0) %}🔴 {{ unread_counts.get(u.id, 0) }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="admin-chat-messages" style="height: 320px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; display: flex; flex-direction: column;"></div>
+                <div class="flex gap-2 mt-4">
+                    <input type="text" id="admin-chat-input" placeholder="Type message..." class="flex-1 bg-gray-950 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-teal-500">
+                    <button onclick="sendAdminChatMessage()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold px-5 py-2.5 rounded-xl text-sm transition">Send</button>
+                </div>
+                <a href="/support" target="_blank" class="inline-block mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-6 rounded-xl text-sm transition">
+                    <i class="fa-solid fa-paper-plane mr-1"></i> Open Support
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Deposit Address Modal -->
+    <div id="deposit-address-modal" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-bold text-teal-400 mb-4">Update Deposit Address</h3>
+            <div class="mb-3">
+                <label class="block text-xs text-gray-400 mb-1">Coin</label>
+                <input type="text" id="modal-coin" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white" disabled>
+            </div>
+            <div class="mb-4">
+                <label class="block text-xs text-gray-400 mb-1">New Address</label>
+                <input type="text" id="modal-new-address" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button onclick="closeDepositAddressModal()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Cancel</button>
+                <button onclick="confirmDepositAddressUpdate()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 px-4 py-2 rounded-xl text-xs font-bold">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Service Modal -->
+    <div id="customer-service-modal" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md">
+            <h3 class="text-lg font-bold text-teal-400 mb-4">Edit Customer Service Settings</h3>
+            <div class="mb-3">
+                <label class="block text-xs text-gray-400 mb-1">Telegram Link</label>
+                <input type="text" id="modal-telegram" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-xs text-gray-400 mb-1">WhatsApp Number</label>
+                <input type="text" id="modal-whatsapp" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-teal-500">
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button onclick="closeCustomerServiceModal()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-xl text-xs font-bold">Cancel</button>
+                <button onclick="confirmCustomerServiceUpdate()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 px-4 py-2 rounded-xl text-xs font-bold">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-600', 'text-gray-950');
+                btn.classList.add('text-gray-400');
+            });
+            document.getElementById('tab-' + tab).classList.add('bg-teal-600', 'text-gray-950');
+            document.getElementById('tab-' + tab).classList.remove('text-gray-400');
+            document.getElementById('page-settings').classList.add('hidden');
+            document.getElementById('page-users').classList.add('hidden');
+            document.getElementById('page-deposit-withdraw').classList.add('hidden');
+            document.getElementById('page-chat').classList.add('hidden');
+            document.getElementById('page-' + tab).classList.remove('hidden');
+            if (tab === 'chat') {
+                loadAdminChatMessages();
+            }
+        }
+
+        // Customer Service settings display & modal
+        function loadCustomerServiceSettings() {
+            fetch('/api/get-settings')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('display-telegram-link').innerText = data.telegram_link || 'Not set';
+                    document.getElementById('display-whatsapp-number').innerText = data.whatsapp_number || 'Not set';
+                })
+                .catch(err => console.error(err));
+        }
+
+        function openCustomerServiceModal() {
+            fetch('/api/get-settings')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('modal-telegram').value = data.telegram_link || '';
+                    document.getElementById('modal-whatsapp').value = data.whatsapp_number || '';
+                    document.getElementById('customer-service-modal').classList.remove('hidden');
+                })
+                .catch(err => console.error(err));
+        }
+
+        function closeCustomerServiceModal() {
+            document.getElementById('customer-service-modal').classList.add('hidden');
+        }
+
+        function confirmCustomerServiceUpdate() {
+            const telegram = document.getElementById('modal-telegram').value.trim();
+            const whatsapp = document.getElementById('modal-whatsapp').value.trim();
+            fetch('/api/admin/settings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ telegram_link: telegram, whatsapp_number: whatsapp })
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert('Settings updated successfully.');
+                loadCustomerServiceSettings();
+                closeCustomerServiceModal();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to update settings.');
+            });
+        }
+
+        // Deposit address modal functions
+        function openDepositAddressModal(coin, current) {
+            document.getElementById('modal-coin').value = coin;
+            document.getElementById('modal-new-address').value = current;
+            document.getElementById('deposit-address-modal').classList.remove('hidden');
+        }
+
+        function closeDepositAddressModal() {
+            document.getElementById('deposit-address-modal').classList.add('hidden');
+        }
+
+        function confirmDepositAddressUpdate() {
+            const coin = document.getElementById('modal-coin').value;
+            const newAddress = document.getElementById('modal-new-address').value.trim();
+            if (!newAddress) {
+                alert('Address is required.');
+                return;
+            }
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/admin/dashboard';
+            form.innerHTML = `<input type="hidden" name="action" value="update_address">
+                              <input type="hidden" name="coin" value="${coin}">
+                              <input type="hidden" name="new_address" value="${newAddress}">`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // User search functions
+        function filterUserById() {
+            const input = document.getElementById('user-id-search-input');
+            const searchId = input.value.trim();
+            if (!searchId) {
+                alert('Please enter a user ID.');
+                return;
+            }
+            const rows = document.querySelectorAll('.user-row');
+            let found = false;
+            rows.forEach(row => {
+                const userId = row.getAttribute('data-user-id');
+                if (userId === searchId) {
+                    row.style.display = '';
+                    found = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            if (!found) {
+                alert('User ID not found.');
+                rows.forEach(row => row.style.display = '');
+            } else {
+                document.getElementById('back-button').classList.remove('hidden');
+            }
+        }
+
+        function showAllUsers() {
+            document.querySelectorAll('.user-row').forEach(row => row.style.display = '');
+            document.getElementById('user-id-search-input').value = '';
+            document.getElementById('back-button').classList.add('hidden');
+        }
+
+        // Deposit/Withdraw filter functions
+        function filterDepositByUserId() {
+            const searchId = document.getElementById('deposit-user-id-search').value.trim();
+            if (!searchId) {
+                alert('Please enter a user ID.');
+                return;
+            }
+            const rows = document.querySelectorAll('.deposit-row');
+            let found = false;
+            rows.forEach(row => {
+                if (row.getAttribute('data-user-id') === searchId) {
+                    row.style.display = '';
+                    found = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            if (!found) {
+                alert('No deposit requests found for this user ID.');
+                rows.forEach(row => row.style.display = '');
+            }
+        }
+
+        function showAllDeposit() {
+            document.querySelectorAll('.deposit-row').forEach(row => row.style.display = '');
+            document.getElementById('deposit-user-id-search').value = '';
+        }
+
+        function filterWithdrawByUserId() {
+            const searchId = document.getElementById('withdraw-user-id-search').value.trim();
+            if (!searchId) {
+                alert('Please enter a user ID.');
+                return;
+            }
+            const rows = document.querySelectorAll('.withdraw-row');
+            let found = false;
+            rows.forEach(row => {
+                if (row.getAttribute('data-user-id') === searchId) {
+                    row.style.display = '';
+                    found = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            if (!found) {
+                alert('No withdrawal requests found for this user ID.');
+                rows.forEach(row => row.style.display = '');
+            }
+        }
+
+        function showAllWithdraw() {
+            document.querySelectorAll('.withdraw-row').forEach(row => row.style.display = '');
+            document.getElementById('withdraw-user-id-search').value = '';
+        }
+
+        // Admin Chat functions
+        function loadAdminChatMessages() {
+            const userId = document.getElementById('chat-user-select').value;
+            const container = document.getElementById('admin-chat-messages');
+            if (!userId) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center">Please select a user to view chat.</p>';
+                return;
+            }
+            fetch(`/api/chat/messages?user_id=${userId}`)
+                .then(r => r.json())
+                .then(messages => {
+                    container.innerHTML = '';
+                    if (messages.length === 0) {
+                        container.innerHTML = '<p class="text-gray-500 text-sm text-center">No messages yet.</p>';
+                        return;
+                    }
+                    messages.forEach(msg => {
+                        const isAdmin = msg.is_admin;
+                        const row = document.createElement('div');
+                        row.style.display = 'flex';
+                        row.style.justifyContent = isAdmin ? 'flex-end' : 'flex-start';
+                        row.style.width = '100%';
+                        row.style.marginBottom = '8px';
+                        const bubble = document.createElement('div');
+                        bubble.style.maxWidth = '80%';
+                        bubble.style.padding = '8px 12px';
+                        bubble.style.borderRadius = '12px';
+                        bubble.style.background = isAdmin ? '#0d9488' : '#374151';
+                        bubble.style.color = 'white';
+                        bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.2)';
+                        bubble.style.wordBreak = 'break-word';
+                        const sender = document.createElement('div');
+                        sender.style.fontSize = '11px';
+                        sender.style.fontWeight = 'bold';
+                        sender.style.marginBottom = '4px';
+                        sender.style.color = isAdmin ? '#ccfbf1' : '#93c5fd';
+                        sender.innerText = msg.sender;
+                        const message = document.createElement('div');
+                        message.style.fontSize = '14px';
+                        message.innerText = msg.message;
+                        const time = document.createElement('div');
+                        time.style.fontSize = '10px';
+                        time.style.opacity = '0.7';
+                        time.style.marginTop = '4px';
+                        time.innerText = msg.created_at;
+                        bubble.appendChild(sender);
+                        bubble.appendChild(message);
+                        bubble.appendChild(time);
+                        row.appendChild(bubble);
+                        container.appendChild(row);
+                    });
+                    container.scrollTop = container.scrollHeight;
+                })
+                .catch(err => {
+                    console.error(err);
+                    container.innerHTML = '<p class="text-red-500 text-sm text-center">Failed to load messages</p>';
+                });
+        }
+
+        function sendAdminChatMessage() {
+            const input = document.getElementById('admin-chat-input');
+            const message = input.value.trim();
+            const userId = document.getElementById('chat-user-select').value;
+            if (!message) return;
+            if (!userId) {
+                alert('Please select a user first.');
+                return;
+            }
+            fetch('/api/chat/send', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: message, user_id: parseInt(userId) })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = '';
+                    loadAdminChatMessages();
+                } else {
+                    alert(data.message || 'Failed to send message');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error sending message');
+            });
+        }
+
+        // Initialize
+        loadCustomerServiceSettings();
+        loadAdminChatMessages();
+        setInterval(loadAdminChatMessages, 3000);
+    </script>
+
+<script>
+(function(){
+    // localStorage မှာ user တစ်ဦးချင်းရဲ့ seen latest_chat_id သိမ်းမယ်
+    let chatSeen = JSON.parse(localStorage.getItem('adminChatUnreadSeen') || '{}');
+
+    function updateChatUserBadges() {
+        fetch('/api/admin/chat-unread')
+            .then(r => r.json())
+            .then(data => {
+                const select = document.getElementById('chat-user-select');
+                if (!select) return;
+                const options = select.querySelectorAll('option');
+                // Clear old dots
+                options.forEach(opt => {
+                    const dot = opt.querySelector('.chat-dot');
+                    if (dot) dot.remove();
+                });
+
+                // Add dot for users with new messages
+                data.forEach(item => {
+                    const userId = String(item.user_id);
+                    const latestId = item.latest_chat_id;
+                    const seenId = chatSeen[userId] || 0;
+                    if (latestId > seenId) {
+                        const opt = select.querySelector(`option[value="${userId}"]`);
+                        if (opt) {
+                            const dot = document.createElement('span');
+                            dot.className = 'chat-dot';
+                            dot.style.display = 'inline-block';
+                            dot.style.width = '8px';
+                            dot.style.height = '8px';
+                            dot.style.background = '#ef4444';
+                            dot.style.borderRadius = '50%';
+                            dot.style.marginLeft = '8px';
+                            opt.appendChild(dot);
+                        }
+                    }
+                });
+
+                // Customer Chat tab badge ကို global အနေနဲ့လည်း update လုပ်မယ် (ရှိပြီးသား logic နဲ့ ပေါင်းမယ်)
+                const anyUnread = data.some(item => item.latest_chat_id > (chatSeen[String(item.user_id)] || 0));
+                const chatBadge = document.getElementById('badge-chat');
+                if (chatBadge) {
+                    if (anyUnread) {
+                        chatBadge.classList.remove('hidden');
+                    } else {
+                        chatBadge.classList.add('hidden');
+                    }
+                }
+            })
+            .catch(err => console.error('Chat unread error:', err));
+    }
+
+    // User ရွေးတဲ့အခါ seen update လုပ်ပြီး dot ပြန်ပျောက်အောင်
+    function markCurrentUserSeen() {
+        const select = document.getElementById('chat-user-select');
+        if (!select || !select.value) return;
+        const userId = select.value;
+        const option = select.querySelector(`option[value="${userId}"]`);
+        if (!option) return;
+        // နောက်ဆုံး chat ID ကို /api/admin/chat-unread ကနေ ပြန်ရှာတယ်
+        fetch('/api/admin/chat-unread')
+            .then(r => r.json())
+            .then(data => {
+                const item = data.find(x => String(x.user_id) === userId);
+                if (item) {
+                    chatSeen[userId] = item.latest_chat_id;
+                    localStorage.setItem('adminChatUnreadSeen', JSON.stringify(chatSeen));
+                    updateChatUserBadges();
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
+    // Existing loadAdminChatMessages ကို မထိဘဲ event listener ထည့်မယ်
+    const userSelect = document.getElementById('chat-user-select');
+    if (userSelect) {
+        userSelect.addEventListener('change', function() {
+            markCurrentUserSeen();
+        });
+    }
+
+    // Initial load & poll
+    updateChatUserBadges();
+    setInterval(updateChatUserBadges, 5000);
+})();
+</script>
+
+
+<script>
+function removeUnreadIndicator(userId) {
+    const select = document.getElementById('chat-user-select');
+    if (!select) return;
+    const option = select.querySelector(`option[value="${userId}"]`);
+    if (option) {
+        const text = option.textContent.split('🔴')[0].trim(); // Remove red dot part
+        option.textContent = text;
+        option.style.color = '';
+    }
+}
+
+// Patch loadAdminChatMessages to call removeUnreadIndicator after loading
+(function(){
+    const originalLoad = window.loadAdminChatMessages;
+    if (typeof originalLoad === 'function') {
+        window.loadAdminChatMessages = function() {
+            originalLoad();
+            const userId = document.getElementById('chat-user-select').value;
+            if (userId) {
+                removeUnreadIndicator(userId);
+            }
+        };
+    }
+})();
+</script>
+
+</body>
+</html>

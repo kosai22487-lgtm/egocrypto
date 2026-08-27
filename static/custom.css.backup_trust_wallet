@@ -1,0 +1,959 @@
+
+/* ===== GLOBAL DESIGN ENHANCEMENTS ===== */
+body {
+    background: #0B0E14 !important;
+    background-image:
+        radial-gradient(ellipse at top left, rgba(79,70,229,0.15), transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(13,148,136,0.15), transparent 50%),
+        radial-gradient(circle at center, rgba(30,58,138,0.05), transparent 70%) !important;
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* Glassmorphism Card */
+.glass-card, .card, .bg-gray-900, .bg-gray-950, .bg-[#12161f], .bg-[#1B212C], .feature-card, .grid-item {
+    backdrop-filter: blur(12px);
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 1.2rem !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Card Hover */
+.glass-card:hover, .card:hover, .bg-gray-900:hover, .bg-gray-950:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 15px rgba(45,212,191,0.2);
+}
+
+/* Fade-in / Slide-up Animation */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+/* Count-up number */
+.count-up {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Buttons Gradient */
+.btn-primary, .auth-btn-gradient, .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+    background: linear-gradient(135deg, #4F46E5, #06B6D4) !important;
+    border: none;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(79,70,229,0.3);
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-primary:hover, .auth-btn-gradient:hover, .bg-blue-600:hover, .bg-indigo-600:hover, .bg-teal-600:hover, .bg-emerald-600:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+/* Sidebar & Bottom Nav Glass */
+#sidebar, nav.fixed.bottom-0, header {
+    backdrop-filter: blur(16px);
+    background: rgba(11,14,20,0.8) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+}
+
+.sidebar-link.active {
+    background: linear-gradient(135deg, rgba(45,212,191,0.2), rgba(79,70,229,0.2)) !important;
+    border: 1px solid rgba(45,212,191,0.3) !important;
+    color: #2dd4bf !important;
+}
+
+.sidebar-link:hover {
+    background: rgba(255,255,255,0.05) !important;
+}
+
+/* Floating Background Blobs */
+@keyframes floatBlob {
+    0% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+    100% { transform: translateY(0) rotate(360deg); }
+}
+
+.background-blob {
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.blob-1 { background: #4F46E5; top: -50px; left: -50px; animation: floatBlob 8s infinite; }
+.blob-2 { background: #06B6D4; bottom: -50px; right: -50px; animation: floatBlob 10s infinite reverse; }
+.blob-3 { background: #8B5CF6; top: 40%; left: 60%; animation: floatBlob 12s infinite; }
+
+/* Particle Canvas */
+#particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    pointer-events: none;
+}
+
+
+/* ===== Header Transparent Override ===== */
+header {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+
+/* Settings page custom card glass effect */
+div[class*="bg-[#1E2533]"],
+div[class*="bg-[#12161f]"] {
+    backdrop-filter: blur(12px);
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+
+/* ==================== THEME CUSTOMIZATION ==================== */
+body[data-theme="light"] {
+    background: #F5F7FA !important;
+    background-image: none !important;
+    color: #111827 !important;
+}
+
+body[data-theme="light"] .bg-gray-900,
+body[data-theme="light"] .bg-gray-950,
+body[data-theme="light"] .bg-[#12161f],
+body[data-theme="light"] .bg-[#1E2533],
+body[data-theme="light"] .card,
+body[data-theme="light"] .glass-card {
+    background: #ffffff !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    color: #111827 !important;
+}
+
+body[data-theme="light"] .text-white {
+    color: #111827 !important;
+}
+
+body[data-theme="light"] .text-gray-400 {
+    color: #4B5563 !important;
+}
+
+body[data-theme="light"] header,
+body[data-theme="light"] #sidebar,
+body[data-theme="light"] nav.fixed.bottom-0 {
+    background: rgba(255,255,255,0.8) !important;
+    border-color: rgba(0,0,0,0.1) !important;
+}
+
+body[data-theme="black"] {
+    background: #000000 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+}
+
+body[data-theme="black"] .card,
+body[data-theme="black"] .glass-card {
+    background: #111111 !important;
+    border: 1px solid #222 !important;
+}
+
+
+/* Matrix Theme Overrides */
+body[data-theme="matrix"] {
+    background: #000 !important;
+    background-image: none !important;
+    color: #00ff00 !important;
+}
+
+body[data-theme="matrix"] .glass-card,
+body[data-theme="matrix"] .card,
+body[data-theme="matrix"] .bg-gray-900,
+body[data-theme="matrix"] .bg-gray-950,
+body[data-theme="matrix"] .bg-[#12161f],
+body[data-theme="matrix"] .bg-[#1E2533] {
+    background: rgba(0, 20, 0, 0.8) !important;
+    border-color: rgba(0, 255, 0, 0.3) !important;
+    color: #00ff00 !important;
+}
+
+body[data-theme="matrix"] .text-white {
+    color: #00ff00 !important;
+}
+
+body[data-theme="matrix"] .text-gray-400 {
+    color: #00cc66 !important;
+}
+
+body[data-theme="matrix"] header,
+body[data-theme="matrix"] #sidebar,
+body[data-theme="matrix"] nav.fixed.bottom-0 {
+    background: rgba(0, 0, 0, 0.8) !important;
+    border-color: rgba(0, 255, 0, 0.3) !important;
+}
+
+
+/* Circuit Grid Theme */
+body[data-theme="circuit"] {
+    background-color: #0a0f1a !important;
+    background-image:
+        linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.08) 1px, transparent 1px),
+        radial-gradient(circle at 25% 25%, rgba(0, 255, 255, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(0, 255, 255, 0.12) 0%, transparent 50%) !important;
+    background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100% !important;
+    color: #00e5ff !important;
+}
+
+body[data-theme="circuit"] .glass-card,
+body[data-theme="circuit"] .card,
+body[data-theme="circuit"] .bg-gray-900,
+body[data-theme="circuit"] .bg-gray-950,
+body[data-theme="circuit"] .bg-[#12161f],
+body[data-theme="circuit"] .bg-[#1E2533] {
+    background: rgba(16, 30, 50, 0.85) !important;
+    border-color: rgba(0, 255, 255, 0.25) !important;
+    color: #00e5ff !important;
+}
+
+body[data-theme="circuit"] .text-white {
+    color: #e0f7fa !important;
+}
+
+body[data-theme="circuit"] .text-gray-400 {
+    color: #80deea !important;
+}
+
+body[data-theme="circuit"] header,
+body[data-theme="circuit"] #sidebar,
+body[data-theme="circuit"] nav.fixed.bottom-0 {
+    background: rgba(10, 15, 26, 0.85) !important;
+    border-color: rgba(0, 255, 255, 0.2) !important;
+}
+
+
+
+
+/* Electric Theme Override (Solid Black, Electric Colors) */
+body[data-theme="electric"] {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    background-image: none !important;
+    color: #00ffcc !important;
+}
+
+body[data-theme="electric"] .glass-card,
+body[data-theme="electric"] .card,
+body[data-theme="electric"] .bg-gray-900,
+body[data-theme="electric"] .bg-gray-950,
+body[data-theme="electric"] .bg-[#12161f],
+body[data-theme="electric"] .bg-[#1E2533] {
+    background: rgba(0, 10, 20, 0.85) !important;
+    background-color: rgba(0, 10, 20, 0.85) !important;
+    background-image: none !important;
+    border-color: rgba(0, 255, 255, 0.25) !important;
+    color: #00ffcc !important;
+}
+
+body[data-theme="electric"] .text-white {
+    color: #e0ffff !important;
+}
+
+body[data-theme="electric"] .text-gray-400 {
+    color: #80deea !important;
+}
+
+body[data-theme="electric"] header,
+body[data-theme="electric"] #sidebar,
+body[data-theme="electric"] nav.fixed.bottom-0 {
+    background: rgba(0, 0, 0, 0.85) !important;
+    background-color: rgba(0, 0, 0, 0.85) !important;
+    background-image: none !important;
+    border-color: rgba(0, 255, 255, 0.2) !important;
+}
+
+
+/* ==================== LIGHT THEME OVERRIDE ==================== */
+body[data-theme="light"] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #111827 !important;
+}
+
+body[data-theme="light"] .glass-card,
+body[data-theme="light"] .card,
+body[data-theme="light"] .bg-gray-900,
+body[data-theme="light"] .bg-gray-950,
+body[data-theme="light"] .bg-[#12161f],
+body[data-theme="light"] .bg-[#1E2533],
+body[data-theme="light"] .feature-card,
+body[data-theme="light"] .grid-item {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    color: #111827 !important;
+}
+
+body[data-theme="light"] .text-white {
+    color: #111827 !important;
+}
+
+body[data-theme="light"] .text-gray-400 {
+    color: #4b5563 !important;
+}
+
+body[data-theme="light"] header,
+body[data-theme="light"] #sidebar,
+body[data-theme="light"] nav.fixed.bottom-0 {
+    background: rgba(255,255,255,0.92) !important;
+    backdrop-filter: blur(12px);
+    border-color: #e5e7eb !important;
+}
+
+body[data-theme="light"] .sidebar-link {
+    color: #4b5563 !important;
+}
+
+body[data-theme="light"] .sidebar-link.active {
+    background: #e0f2fe !important;
+    border-color: #0ea5e9 !important;
+    color: #0284c7 !important;
+}
+
+body[data-theme="light"] input,
+body[data-theme="light"] select,
+body[data-theme="light"] textarea {
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    color: #111827 !important;
+}
+
+body[data-theme="light"] .auth-input,
+body[data-theme="light"] .reg-input {
+    background-color: #f9fafb !important;
+    border-color: #d1d5db !important;
+}
+
+body[data-theme="light"] .bg-gray-800 {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+}
+
+body[data-theme="light"] .bg-teal-600,
+body[data-theme="light"] .bg-blue-600,
+body[data-theme="light"] .bg-indigo-600,
+body[data-theme="light"] .btn-primary,
+body[data-theme="light"] .auth-btn-gradient {
+    background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+    color: #ffffff !important;
+}
+
+body[data-theme="light"] table {
+    background: #ffffff !important;
+}
+body[data-theme="light"] thead {
+    background: #f9fafb !important;
+}
+body[data-theme="light"] tbody tr {
+    background: #ffffff !important;
+    color: #111827 !important;
+}
+
+
+/* ==================== LIGHT THEME EXACT COLOR OVERRIDES ==================== */
+body[data-theme="light"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+}
+
+/* Dark arbitrary background classes to light gray */
+body[data-theme="light"] .bg-\[\#1C212E\],
+body[data-theme="light"] .bg-\[\#12161f\],
+body[data-theme="light"] .bg-\[\#1E2533\],
+body[data-theme="light"] .bg-\[\#0B0E14\] {
+    background: #F3F4F6 !important;
+    background-color: #F3F4F6 !important;
+    border-color: #E5E7EB !important;
+}
+
+/* Text color overrides */
+body[data-theme="light"] .text-white {
+    color: #111827 !important;
+}
+body[data-theme="light"] .text-gray-400 {
+    color: #6B7280 !important;
+}
+body[data-theme="light"] .text-gray-500 {
+    color: #6B7280 !important;
+}
+body[data-theme="light"] .text-gray-600 {
+    color: #4B5563 !important;
+}
+body[data-theme="light"] .text-gray-300 {
+    color: #9CA3AF !important;
+}
+
+/* Main Wallet Card (white) */
+body[data-theme="light"] .bg-gray-900,
+body[data-theme="light"] .bg-gray-950 {
+    background: #FFFFFF !important;
+    border: 1px solid #E5E7EB !important;
+}
+
+/* Boxes (Receive, Deposit, Cards) */
+body[data-theme="light"] .bg-gray-100,
+body[data-theme="light"] .bg-gray-50,
+body[data-theme="light"] .feature-card,
+body[data-theme="light"] .grid-item {
+    background: #F3F4F6 !important;
+    border: 1px solid #E5E7EB !important;
+    border-radius: 12px !important;
+}
+
+/* Buttons - View All */
+body[data-theme="light"] .bg-gray-100 {
+    background: #F3F4F6 !important;
+}
+
+/* Bottom Navigation */
+body[data-theme="light"] nav.fixed.bottom-0 {
+    background: #FFFFFF !important;
+    border-top: 1px solid #E5E7EB !important;
+}
+body[data-theme="light"] nav.fixed.bottom-0 i,
+body[data-theme="light"] nav.fixed.bottom-0 .fa-solid {
+    color: #9CA3AF !important;
+}
+body[data-theme="light"] nav.fixed.bottom-0 .active,
+body[data-theme="light"] nav.fixed.bottom-0 .bg-teal-500\/10,
+body[data-theme="light"] nav.fixed.bottom-0 .text-teal-400 {
+    color: #111827 !important;
+}
+
+/* Icon Colors */
+body[data-theme="light"] .fa-bitcoin,
+body[data-theme="light"] .bitcoin-symbol,
+body[data-theme="light"] [class*="bitcoin"] {
+    color: #F7931A !important;
+}
+body[data-theme="light"] .fa-ethereum,
+body[data-theme="light"] .ethereum-symbol,
+body[data-theme="light"] [class*="ethereum"] {
+    color: #627EEA !important;
+}
+body[data-theme="light"] .fa-qrcode {
+    color: #000000 !important;
+}
+
+/* Main Wallet Icon (blue) */
+body[data-theme="light"] .bg-blue-500,
+body[data-theme="light"] .bg-blue-600,
+body[data-theme="light"] .bg-indigo-600,
+body[data-theme="light"] .bg-teal-600 {
+    background: #3B82F6 !important;
+    color: white !important;
+}
+
+/* Inputs */
+body[data-theme="light"] input,
+body[data-theme="light"] select,
+body[data-theme="light"] textarea {
+    background-color: #FFFFFF !important;
+    border: 1px solid #D1D5DB !important;
+    color: #111827 !important;
+}
+
+
+/* ==================== LIGHT THEME FINAL EXACT COLORS ==================== */
+body[data-theme="light"] {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
+}
+
+/* All dark backgrounds to light gray */
+body[data-theme="light"] .bg-\[\#0B0E14\],
+body[data-theme="light"] .bg-\[\#12161f\],
+body[data-theme="light"] .bg-\[\#1C212E\],
+body[data-theme="light"] .bg-\[\#1E2533\],
+body[data-theme="light"] .bg-\[\#10121C\],
+body[data-theme="light"] .bg-gray-950,
+body[data-theme="light"] .bg-gray-900,
+body[data-theme="light"] .bg-gray-800,
+body[data-theme="light"] .bg-slate-950,
+body[data-theme="light"] .bg-slate-900,
+body[data-theme="light"] .bg-slate-800 {
+    background: #F3F4F6 !important;
+    background-color: #F3F4F6 !important;
+    border-color: #E5E7EB !important;
+    color: #111827 !important;
+}
+
+/* White card for main wallet */
+body[data-theme="light"] .bg-white {
+    background: #FFFFFF !important;
+}
+
+/* Text colors */
+body[data-theme="light"] .text-white {
+    color: #111827 !important;
+}
+body[data-theme="light"] .text-gray-400 {
+    color: #6B7280 !important;
+}
+body[data-theme="light"] .text-gray-500 {
+    color: #6B7280 !important;
+}
+body[data-theme="light"] .text-gray-600 {
+    color: #4B5563 !important;
+}
+body[data-theme="light"] .text-gray-300 {
+    color: #9CA3AF !important;
+}
+
+/* Borders */
+body[data-theme="light"] .border-gray-800,
+body[data-theme="light"] .border-gray-700,
+body[data-theme="light"] .border-slate-800,
+body[data-theme="light"] .border-slate-700 {
+    border-color: #E5E7EB !important;
+}
+
+/* Buttons & icons */
+body[data-theme="light"] .bg-blue-600,
+body[data-theme="light"] .bg-blue-500,
+body[data-theme="light"] .bg-indigo-600,
+body[data-theme="light"] .bg-teal-600,
+body[data-theme="light"] .bg-emerald-600 {
+    background: #3B82F6 !important;
+    color: #FFFFFF !important;
+}
+
+/* Bitcoin & Ethereum icon colors */
+body[data-theme="light"] .fa-bitcoin,
+body[data-theme="light"] [class*="bitcoin"] {
+    color: #F7931A !important;
+}
+body[data-theme="light"] .fa-ethereum,
+body[data-theme="light"] [class*="ethereum"] {
+    color: #627EEA !important;
+}
+body[data-theme="light"] .fa-qrcode {
+    color: #000000 !important;
+}
+
+/* Bottom Navigation */
+body[data-theme="light"] nav.fixed.bottom-0 {
+    background: #FFFFFF !important;
+    border-top: 1px solid #E5E7EB !important;
+}
+body[data-theme="light"] nav.fixed.bottom-0 i,
+body[data-theme="light"] nav.fixed.bottom-0 .fa-solid {
+    color: #9CA3AF !important;
+}
+body[data-theme="light"] nav.fixed.bottom-0 .active,
+body[data-theme="light"] nav.fixed.bottom-0 .text-teal-400,
+body[data-theme="light"] nav.fixed.bottom-0 .bg-teal-500\/10 {
+    color: #111827 !important;
+}
+
+/* Inputs */
+body[data-theme="light"] input,
+body[data-theme="light"] select,
+body[data-theme="light"] textarea {
+    background-color: #FFFFFF !important;
+    border: 1px solid #D1D5DB !important;
+    color: #111827 !important;
+}
+body[data-theme="light"] .auth-input,
+body[data-theme="light"] .reg-input {
+    background-color: #F9FAFB !important;
+}
+
+
+/* ==================== LIGHT THEME: ALL BOXES ==================== */
+body[data-theme="light"] .glass-card,
+body[data-theme="light"] .card,
+body[data-theme="light"] .bg-gray-100,
+body[data-theme="light"] .bg-gray-50,
+body[data-theme="light"] .bg-gray-900,
+body[data-theme="light"] .bg-gray-950,
+body[data-theme="light"] .bg-gray-800,
+body[data-theme="light"] .bg-slate-900,
+body[data-theme="light"] .bg-slate-800,
+body[data-theme="light"] .bg-slate-950,
+body[data-theme="light"] .bg-\[\#1C212E\],
+body[data-theme="light"] .bg-\[\#12161f\],
+body[data-theme="light"] .bg-\[\#0B0E14\],
+body[data-theme="light"] .bg-\[\#10121C\],
+body[data-theme="light"] .bg-\[\#1E2533\],
+body[data-theme="light"] .feature-card,
+body[data-theme="light"] .grid-item,
+body[data-theme="light"] [class*="bg-gray-9"],
+body[data-theme="light"] [class*="bg-slate-"] {
+    background: #F3F4F6 !important;
+    background-color: #F3F4F6 !important;
+    border: 1px solid #E5E7EB !important;
+    border-radius: 12px !important;
+    color: #111827 !important;
+}
+
+/* ID number teal */
+body[data-theme="light"] .text-teal-400,
+body[data-theme="light"] .text-teal-500,
+body[data-theme="light"] .text-teal-600 {
+    color: #2DD4BF !important;
+}
+
+/* Keep main white cards if they need white (like Main Wallet) */
+body[data-theme="light"] .bg-white {
+    background: #FFFFFF !important;
+    border-color: #E5E7EB !important;
+}
+
+/* Ensure buttons like Download also match */
+body[data-theme="light"] .bg-gray-100 {
+    background: #F3F4F6 !important;
+}
+
+
+/* ==================== GOLD GRADIENT BORDERS (Light Theme) ==================== */
+body[data-theme="light"] .glass-card,
+body[data-theme="light"] .card,
+body[data-theme="light"] .bg-gray-100,
+body[data-theme="light"] .bg-gray-50,
+body[data-theme="light"] .bg-gray-900,
+body[data-theme="light"] .bg-gray-950,
+body[data-theme="light"] .bg-gray-800,
+body[data-theme="light"] .bg-slate-900,
+body[data-theme="light"] .bg-slate-800,
+body[data-theme="light"] .bg-slate-950,
+body[data-theme="light"] .bg-\[\#1C212E\],
+body[data-theme="light"] .bg-\[\#12161f\],
+body[data-theme="light"] .bg-\[\#0B0E14\],
+body[data-theme="light"] .bg-\[\#10121C\],
+body[data-theme="light"] .bg-\[\#1E2533\],
+body[data-theme="light"] .feature-card,
+body[data-theme="light"] .grid-item {
+    border: 1px solid transparent !important;
+    background:
+        linear-gradient(#F3F4F6, #F3F4F6) padding-box,
+        linear-gradient(135deg, #FFD700, #FFA500) border-box !important;
+    border-radius: 12px !important;
+}
+
+
+/* ==================== GOLD GRADIENT BORDERS (Light Theme) ==================== */
+body[data-theme="light"] .glass-card,
+body[data-theme="light"] .card,
+body[data-theme="light"] .bg-gray-100,
+body[data-theme="light"] .bg-gray-50,
+body[data-theme="light"] .bg-gray-900,
+body[data-theme="light"] .bg-gray-950,
+body[data-theme="light"] .bg-gray-800,
+body[data-theme="light"] .bg-slate-900,
+body[data-theme="light"] .bg-slate-800,
+body[data-theme="light"] .bg-slate-950,
+body[data-theme="light"] .bg-\[\#1C212E\],
+body[data-theme="light"] .bg-\[\#12161f\],
+body[data-theme="light"] .bg-\[\#0B0E14\],
+body[data-theme="light"] .bg-\[\#10121C\],
+body[data-theme="light"] .bg-\[\#1E2533\],
+body[data-theme="light"] .feature-card,
+body[data-theme="light"] .grid-item {
+    border: 1px solid transparent !important;
+    background:
+        linear-gradient(#F3F4F6, #F3F4F6) padding-box,
+        linear-gradient(135deg, #FFD700, #FFA500) border-box !important;
+    border-radius: 12px !important;
+}
+
+
+/* ==================== GOLD BORDER GLOW (Light Theme) ==================== */
+body[data-theme="light"] .glass-card,
+body[data-theme="light"] .card,
+body[data-theme="light"] .bg-gray-100,
+body[data-theme="light"] .bg-gray-50,
+body[data-theme="light"] .bg-gray-900,
+body[data-theme="light"] .bg-gray-950,
+body[data-theme="light"] .bg-gray-800,
+body[data-theme="light"] .bg-slate-900,
+body[data-theme="light"] .bg-slate-800,
+body[data-theme="light"] .bg-slate-950,
+body[data-theme="light"] .bg-\[\#1C212E\],
+body[data-theme="light"] .bg-\[\#12161f\],
+body[data-theme="light"] .bg-\[\#0B0E14\],
+body[data-theme="light"] .bg-\[\#10121C\],
+body[data-theme="light"] .bg-\[\#1E2533\],
+body[data-theme="light"] .feature-card,
+body[data-theme="light"] .grid-item {
+    box-shadow: 0 0 6px rgba(255, 215, 0, 0.3), 0 0 12px rgba(255, 165, 0, 0.15);
+}
+
+
+/* ==================== BRIGHT ICONS & IMAGES (Light Theme) ==================== */
+/* Make all images more vivid on white background */
+body[data-theme="light"] img {
+    filter: saturate(1.5) brightness(1.05);
+}
+
+/* Coin icon colors (using Font Awesome or text classes) */
+body[data-theme="light"] .fa-bitcoin,
+body[data-theme="light"] [class*="bitcoin"] {
+    color: #F7931A !important;
+}
+body[data-theme="light"] .fa-ethereum,
+body[data-theme="light"] [class*="ethereum"] {
+    color: #627EEA !important;
+}
+body[data-theme="light"] .fa-tether,
+body[data-theme="light"] [class*="tether"] {
+    color: #26A17B !important;
+}
+body[data-theme="light"] .fa-solana,
+body[data-theme="light"] [class*="solana"] {
+    color: #9945FF !important;
+}
+body[data-theme="light"] .fa-bnb,
+body[data-theme="light"] [class*="bnb"] {
+    color: #F0B90B !important;
+}
+body[data-theme="light"] .fa-xrp,
+body[data-theme="light"] [class*="xrp"] {
+    color: #23292F !important;
+}
+body[data-theme="light"] .fa-cardano,
+body[data-theme="light"] [class*="cardano"] {
+    color: #0D1E30 !important;
+}
+body[data-theme="light"] .fa-dogecoin,
+body[data-theme="light"] [class*="dogecoin"] {
+    color: #C2A633 !important;
+}
+body[data-theme="light"] .fa-polkadot,
+body[data-theme="light"] [class*="polkadot"] {
+    color: #E6007A !important;
+}
+body[data-theme="light"] .fa-polygon,
+body[data-theme="light"] [class*="polygon"] {
+    color: #8247E5 !important;
+}
+
+/* QR code & generic action icons */
+body[data-theme="light"] .fa-qrcode,
+body[data-theme="light"] .fa-barcode {
+    color: #000000 !important;
+}
+body[data-theme="light"] .fa-arrow-down,
+body[data-theme="light"] .fa-arrow-up,
+body[data-theme="light"] .fa-paper-plane,
+body[data-theme="light"] .fa-clock-rotate-left {
+    color: #3B82F6 !important;
+}
+
+/* Make any grey icon to blue-ish for visibility */
+body[data-theme="light"] .fa-solid,
+body[data-theme="light"] .fa-regular {
+    color: #2563EB !important;
+}
+
+
+/* ==================== LIGHT THEME: SWIFT MODAL & AI ARBITRAGE ==================== */
+/* Action Modal (Swift button) */
+body[data-theme="light"] #action-modal,
+body[data-theme="light"] #action-modal .swift-item,
+body[data-theme="light"] #action-modal .bg-\[\#1a212e\],
+body[data-theme="light"] #action-modal .bg-\[\#12161f\],
+body[data-theme="light"] #action-modal .bg-\[\#0b0e14\],
+body[data-theme="light"] #action-modal .bg-\[\#1B212C\] {
+    background: #F3F4F6 !important;
+    background-color: #F3F4F6 !important;
+    border-color: #E5E7EB !important;
+    color: #111827 !important;
+}
+
+body[data-theme="light"] #action-modal .text-white,
+body[data-theme="light"] #action-modal .text-gray-400 {
+    color: #111827 !important;
+}
+
+body[data-theme="light"] #action-modal .text-gray-400 {
+    color: #6B7280 !important;
+}
+
+/* Withdraw/History Modal */
+body[data-theme="light"] #withdraw-modal .bg-\[\#12161f\],
+body[data-theme="light"] #history-modal .bg-\[\#12161f\],
+body[data-theme="light"] #withdraw-modal .bg-\[\#0b0e14\],
+body[data-theme="light"] #history-modal .bg-\[\#0b0e14\],
+body[data-theme="light"] #withdraw-modal .bg-gray-900,
+body[data-theme="light"] #history-modal .bg-gray-900 {
+    background: #FFFFFF !important;
+    border: 1px solid #E5E7EB !important;
+    color: #111827 !important;
+}
+
+body[data-theme="light"] #withdraw-modal .text-white,
+body[data-theme="light"] #history-modal .text-white {
+    color: #111827 !important;
+}
+
+/* AI Arbitrage Page - all dark backgrounds */
+body[data-theme="light"] .bg-\[\#12161f\],
+body[data-theme="light"] .bg-\[\#1E2533\],
+body[data-theme="light"] .bg-\[\#1C212E\],
+body[data-theme="light"] .bg-\[\#10121C\],
+body[data-theme="light"] .bg-gray-900,
+body[data-theme="light"] .bg-gray-950,
+body[data-theme="light"] .bg-gray-800 {
+    background: #F3F4F6 !important;
+    border-color: #E5E7EB !important;
+    color: #111827 !important;
+}
+
+body[data-theme="light"] .ai-arbitrage-page .text-white,
+body[data-theme="light"] .bg-white .text-white,
+body[data-theme="light"] [class*="bg-\[\#"] .text-white {
+    color: #111827 !important;
+}
+
+/* Ensure all inputs/selects in these sections also match */
+body[data-theme="light"] #action-modal input,
+body[data-theme="light"] #action-modal select,
+body[data-theme="light"] #withdraw-modal input,
+body[data-theme="light"] #history-modal input,
+body[data-theme="light"] .ai-arbitrage-page input,
+body[data-theme="light"] .ai-arbitrage-page select {
+    background-color: #FFFFFF !important;
+    border: 1px solid #D1D5DB !important;
+    color: #111827 !important;
+}
+
+
+/* ==================== LIGHT THEME AGGRESSIVE OVERRIDE ==================== */
+/* Force all dark backgrounds to light gray */
+body[data-theme="light"] .bg-\[\#0B0E14\],
+body[data-theme="light"] .bg-\[\#12161f\],
+body[data-theme="light"] .bg-\[\#1C212E\],
+body[data-theme="light"] .bg-\[\#1E2533\],
+body[data-theme="light"] .bg-\[\#10121C\],
+body[data-theme="light"] .bg-\[\#1A212E\],
+body[data-theme="light"] .bg-\[\#131722\],
+body[data-theme="light"] [class*="bg-gray-9"],
+body[data-theme="light"] [class*="bg-slate-"],
+body[data-theme="light"] [class*="bg-[#"] {
+    background: #F3F4F6 !important;
+    background-color: #F3F4F6 !important;
+    border-color: #E5E7EB !important;
+    color: #111827 !important;
+}
+
+/* Force all white text to dark */
+body[data-theme="light"] [class*="text-white"],
+body[data-theme="light"] .text-white,
+body[data-theme="light"] [class*="text-gray-4"],
+body[data-theme="light"] [class*="text-gray-5"] {
+    color: #111827 !important;
+}
+
+/* Keep gray subtexts readable */
+body[data-theme="light"] .text-gray-500,
+body[data-theme="light"] .text-gray-600 {
+    color: #4B5563 !important;
+}
+
+/* Inputs & selects */
+body[data-theme="light"] input,
+body[data-theme="light"] select,
+body[data-theme="light"] textarea {
+    background-color: #FFFFFF !important;
+    border: 1px solid #D1D5DB !important;
+    color: #111827 !important;
+}
+
+/* AI Arbitrage specific card reset */
+body[data-theme="light"] .ai-arbitrage-card,
+body[data-theme="light"] .ai-plan-card {
+    background: #F3F4F6 !important;
+    border: 1px solid #E5E7EB !important;
+    border-radius: 12px !important;
+    color: #111827 !important;
+}
+
+/* ==================== BRIGHT ICONS & COIN LOGOS (Light Theme) ==================== */
+/* Make images more vivid */
+body[data-theme="light"] img {
+    filter: saturate(1.8) brightness(1.05);
+}
+
+/* Coin Logo specific classes */
+body[data-theme="light"] .coin-logo,
+body[data-theme="light"] .crypto-icon,
+body[data-theme="light"] .icon-coin {
+    filter: saturate(2) brightness(1.1);
+}
+
+/* Font Awesome icon brand colors */
+body[data-theme="light"] .fa-bitcoin,
+body[data-theme="light"] [class*="bitcoin"] {
+    color: #F7931A !important;
+}
+body[data-theme="light"] .fa-ethereum,
+body[data-theme="light"] [class*="ethereum"] {
+    color: #627EEA !important;
+}
+body[data-theme="light"] .fa-tether,
+body[data-theme="light"] [class*="tether"] {
+    color: #26A17B !important;
+}
+body[data-theme="light"] .fa-solana,
+body[data-theme="light"] [class*="solana"] {
+    color: #9945FF !important;
+}
+body[data-theme="light"] .fa-bnb,
+body[data-theme="light"] [class*="bnb"] {
+    color: #F0B90B !important;
+}
+body[data-theme="light"] .fa-xrp,
+body[data-theme="light"] [class*="xrp"] {
+    color: #23292F !important;
+}
+body[data-theme="light"] .fa-cardano,
+body[data-theme="light"] [class*="cardano"] {
+    color: #0D1E30 !important;
+}
+body[data-theme="light"] .fa-dogecoin,
+body[data-theme="light"] [class*="dogecoin"] {
+    color: #C2A633 !important;
+}
+body[data-theme="light"] .fa-polkadot,
+body[data-theme="light"] [class*="polkadot"] {
+    color: #E6007A !important;
+}
+body[data-theme="light"] .fa-polygon,
+body[data-theme="light"] [class*="polygon"] {
+    color: #8247E5 !important;
+}
+
+/* Action buttons / general icons */
+body[data-theme="light"] .fa-arrow-down,
+body[data-theme="light"] .fa-arrow-up,
+body[data-theme="light"] .fa-paper-plane,
+body[data-theme="light"] .fa-clock-rotate-left,
+body[data-theme="light"] .fa-qrcode {
+    color: #3B82F6 !important;
+}

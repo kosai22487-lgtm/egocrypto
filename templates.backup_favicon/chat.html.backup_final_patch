@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto p-4 pb-20">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
+        <h2 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-headset mr-2"></i>Customer Support Chat</h2>
+        <div class="flex flex-col space-y-2 mb-4">
+            <div id="user-chat-messages" class="h-80 overflow-y-auto bg-black/30 rounded-xl p-3 space-y-2"></div>
+        </div>
+        <div class="flex gap-2">
+            <input type="text" id="user-chat-input" placeholder="Type your message..." class="flex-1 bg-gray-950 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-teal-500">
+            <button onclick="sendUserChatMessage()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold px-5 py-2.5 rounded-xl text-sm transition">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadUserChatMessages() {
+    fetch('/api/chat/messages')
+        .then(r => r.json())
+        .then(messages => {
+            const container = document.getElementById('user-chat-messages');
+            if (messages.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center">No messages yet. Start a conversation!</p>';
+                return;
+            }
+            container.innerHTML = messages.map(msg => {
+                const isAdmin = msg.is_admin;
+                return `
+                    <div style="display: flex; justify-content: ${isAdmin ? 'flex-end' : 'flex-start'}; margin-bottom: 8px;">
+                        <div style="max-width: 80%; padding: 8px 12px; border-radius: 12px; background-color: ${isAdmin ? '#0d9488' : '#374151'}; color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                            <div style="font-size: 11px; font-weight: bold; color: ${isAdmin ? '#ccfbf1' : '#93c5fd'}; margin-bottom: 4px;">${msg.sender}</div>
+                            <div style="font-size: 14px;">${msg.message}</div>
+                            <div style="font-size: 10px; opacity: 0.7; margin-top: 4px;">${msg.created_at}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('user-chat-messages').innerHTML = '<p class="text-red-500 text-sm text-center">Failed to load messages</p>';
+        });
+}
+
+function sendUserChatMessage() {
+    const input = document.getElementById('user-chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    fetch('/api/chat/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ message: message })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            loadUserChatMessages();
+        } else {
+            alert(data.message || 'Failed to send message');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Error sending message');
+    });
+}
+
+loadUserChatMessages();
+setInterval(loadUserChatMessages, 3000);
+</script>
+{% endblock %}

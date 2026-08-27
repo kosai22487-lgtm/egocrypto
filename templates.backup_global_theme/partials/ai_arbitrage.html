@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .arbi-page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+    .arbi-back-btn, .arbi-home-btn { color: #9ca3af; background: none; border: none; font-size: 20px; cursor: pointer; }
+    .arbi-back-btn:hover, .arbi-home-btn:hover { color: #ffffff; }
+    .arbi-header-title { font-size: 18px; font-weight: 700; color: #ffffff; }
+
+    .arbi-main-card {
+        background: linear-gradient(145deg, #0e1b2b 0%, #1a2b3c 100%);
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        padding: 20px;
+        color: #e0e0e0;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .arbi-main-card h1 { color: #38bdf8; font-size: 24px; margin: 0 0 4px; }
+    .arbi-main-card p { color: #94a3b8; font-size: 14px; margin: 0 0 16px; }
+    .arbi-escrow-btn { background: #2563eb; border: none; color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .arbi-escrow-btn:hover { background: #1d4ed8; }
+
+    .arbi-income-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .arbi-income-item { background: #12161f; border: 1px solid #1f2937; border-radius: 12px; padding: 14px; text-align: center; }
+    .arbi-income-label { color: #6b7280; font-size: 12px; }
+    .arbi-income-value { color: #ffffff; font-size: 20px; font-weight: 700; margin-top: 4px; }
+    .arbi-income-value.positive { color: #34d399; }
+
+    .arbi-plan-list { display: flex; flex-direction: column; align-items: stretch; width: 100%; gap: 12px; margin-top: 16px; }
+    .arbi-plan-card {
+        width: 100%;
+        max-width: 100%;
+        background: #12161f;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        color: #e0e0e0;
+    }
+    .arbi-plan-card:hover { border-color: #38bdf8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .arbi-plan-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .arbi-plan-badge { background: #1e293b; color: #38bdf8; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .arbi-plan-name { font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+    .arbi-plan-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .arbi-plan-income { color: #34d399; font-size: 13px; font-weight: 600; text-align: right; }
+    .arbi-plan-arrow { color: #6b7280; }
+
+    /* Escrow Modal */
+    #escrow-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .escrow-modal-content { background: #12161f; border: 1px solid #1f2937; border-radius: 16px; padding: 24px; width: 100%; max-width: 400px; color: #e0e0e0; }
+</style>
+
+<div class="space-y-4 pb-20 text-gray-100">
+    <!-- Page Header -->
+    <div class="arbi-page-header">
+        <button class="arbi-back-btn" onclick="window.location.href='/'" title="Back to Dashboard">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <span class="arbi-header-title">AI Arbitrage</span>
+        <button class="arbi-home-btn" onclick="window.location.href='/'" title="Home">
+            <i class="fa-solid fa-house"></i>
+        </button>
+    </div>
+
+    <!-- Main Position Card with Robot -->
+    <div class="arbi-main-card" style="position: relative; overflow: hidden; display: flex; align-items: center; gap: 16px;">
+        <div style="flex: 1;">
+            <p style="font-size:12px; text-transform:uppercase; letter-spacing:0.05em;">Position</p>
+            <h1 style="margin: 4px 0;"><span id="escrow-balance">0.00</span> <span style="font-size:16px; color:#94a3b8;">USDT</span></h1>
+            <p style="margin: 0 0 12px;">Total escrow balance</p>
+            <button class="arbi-escrow-btn" onclick="openEscrowModal()">Escrow order</button>
+        </div>
+        <div style="flex-shrink: 0; width: 110px; height: 110px; display: flex; align-items: center; justify-content: center;">
+            <img src="/static/ai_robot.png" alt="AI Robot" style="width: 100%; height: 100%; object-fit: contain; border: none; background: transparent; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
+        </div>
+    </div>
+
+<!-- Income Section -->
+    <div class="arbi-income-grid">
+        <div class="arbi-income-item">
+            <div class="arbi-income-label">Total income USDT</div>
+            <div class="arbi-income-value" id="total-income">0.00</div>
+        </div>
+        <div class="arbi-income-item">
+            <div class="arbi-income-label">Daily income USDT</div>
+            <div class="arbi-income-value positive" id="daily-income">0.00</div>
+        </div>
+    </div>
+
+    <!-- Position Buttons (Fixed 2-column layout without extra empty boxes) -->
+    <div class="grid grid-cols-2 gap-3 mt-4">
+        <button onclick="showActivePositions()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-2 rounded-xl text-xs sm:text-sm transition flex items-center justify-center">
+            <i class="fa-solid fa-list mr-1"></i> Active Positions
+        </button>
+        <button onclick="showPositionHistory()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-2 rounded-xl text-xs sm:text-sm transition flex items-center justify-center">
+            <i class="fa-solid fa-clock-rotate-left mr-1"></i> Position History
+        </button>
+    </div>
+
+    <!-- Plan Suggestion -->
+    <div id="plan-suggestion" class="bg-[#12161f] border border-gray-800 rounded-xl p-3 text-xs text-gray-300"></div>
+
+    <!-- Smart Plans -->
+    <div class="arbi-plan-list">
+        {% for plan_id, plan in PLAN_DATA.items() %}
+        <a href="{{ url_for('arbitrage_plan', plan_id=plan_id) }}" class="arbi-plan-card">
+            <div class="arbi-plan-left">
+                <span class="arbi-plan-badge">{{ plan.days }}</span>
+                <span class="arbi-plan-name">{{ plan.name }}</span>
+            </div>
+            <div class="arbi-plan-right">
+                <span class="arbi-plan-income">{{ plan.income }}</span>
+                <i class="fa-solid fa-chevron-right arbi-plan-arrow"></i>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Escrow Modal -->
+<div id="escrow-modal">
+    <div class="escrow-modal-content">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">Escrow Order</h3>
+            <button onclick="closeEscrowModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="space-y-2 mb-3">
+            <p class="text-sm text-gray-400">Main Wallet Balance: <span id="wallet-balance" class="text-white font-bold">$0.00</span></p>
+            <p class="text-sm text-gray-400">Total Escrow Balance: <span id="escrow-balance-display" class="text-white font-bold">$0.00</span></p>
+        </div>
+        <input type="number" id="escrow-amount" placeholder="Enter amount" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-white mb-4">
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="moveToEscrow()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm transition">
+                <i class="fa-solid fa-arrow-right mr-1"></i> Move to Escrow
+            </button>
+            <button onclick="moveToMain()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm transition">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Move to Main
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let walletBalance = 0;
+
+    async function fetchEscrowData() {
+        try {
+            const res = await fetch('/api/escrow/balance');
+            const data = await res.json();
+            walletBalance = data.wallet_balance;
+            document.getElementById('escrow-balance').innerText = data.escrow_balance.toFixed(2);
+            document.getElementById('wallet-balance').innerText = '$' + data.wallet_balance.toFixed(2);
+            document.getElementById('escrow-balance-display').innerText = '$' + data.escrow_balance.toFixed(2);
+            // Fetch active positions for income calculation
+            fetch('/api/positions/active').then(r => r.json()).then(positions => {
+                if (positions.length > 0) {
+                    const totalProfit = positions.reduce((sum, p) => sum + p.total_income, 0);
+                    const dailyProfit = positions.reduce((sum, p) => sum + p.daily_income, 0);
+                    document.getElementById('total-income').innerText = totalProfit.toFixed(2);
+                    document.getElementById('daily-income').innerText = dailyProfit.toFixed(2);
+                } else {
+                    document.getElementById('total-income').innerText = '0.00';
+                    document.getElementById('daily-income').innerText = '0.00';
+                }
+            });
+            // Daily income will be set by active positions fetch
+            updatePlanSuggestion(data.escrow_balance);
+            highlightActivePlan(data.escrow_balance);
+        } catch (err) { console.error(err); }
+    }
+
+    function openEscrowModal() {
+        document.getElementById('escrow-modal').style.display = 'flex';
+        document.getElementById('wallet-balance').innerText = '$' + walletBalance.toFixed(2);
+    }
+    function closeEscrowModal() { document.getElementById('escrow-modal').style.display = 'none'; }
+
+    async function moveToEscrow() {
+        const amount = parseFloat(document.getElementById('escrow-amount').value);
+        if (!amount || amount <= 0) {
+            alert('Please enter a valid amount.');
+            return;
+        }
+        if (amount > walletBalance) {
+            alert('Insufficient wallet balance.');
+            return;
+        }
+        try {
+            const res = await fetch('/api/escrow/order', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ amount: amount })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert('Escrow order placed successfully!');
+                document.getElementById('escrow-amount').value = '';
+                closeEscrowModal();
+                fetchEscrowData();
+            } else {
+                alert(result.message);
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    async function moveToMain() {
+        const amount = parseFloat(document.getElementById('escrow-amount').value);
+        if (!amount || amount <= 0) {
+            alert('Please enter a valid amount.');
+            return;
+        }
+        try {
+            const res = await fetch('/api/escrow/withdraw', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ amount: amount })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert(result.message);
+                document.getElementById('escrow-amount').value = '';
+                closeEscrowModal();
+                fetchEscrowData();
+            } else {
+                alert(result.message);
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    const PLAN_RANGES = {
+        'Smart Plan A': { min: 500, max: 2000 },
+        'Smart Plan B': { min: 2001, max: 10000 },
+        'Smart Plan C': { min: 10001, max: 50000 },
+        'Smart Plan D': { min: 50001, max: 200000 },
+        'Smart Plan E': { min: 200001, max: 500000 },
+        'Smart Plan VIP': { min: 500001, max: 3000000 },
+        'Crypto pulse Max': { min: 3000001, max: 10000000 }
+    };
+
+    function getPlanNameFromCard(card) {
+        const nameEl = card.querySelector('.arbi-plan-name');
+        return nameEl ? nameEl.innerText.trim() : '';
+    }
+
+    function getPlanRange(planName) {
+        for (const [name, range] of Object.entries(PLAN_RANGES)) {
+            if (planName.includes(name) || name.includes(planName)) {
+                return range;
+            }
+        }
+        return null;
+    }
+
+    function highlightActivePlan(escrowBalance) {
+        const planCards = document.querySelectorAll('.arbi-plan-card');
+        planCards.forEach(card => {
+            const planName = getPlanNameFromCard(card);
+            const range = getPlanRange(planName);
+            if (!range) return;
+            card.classList.remove('active-plan');
+            if (escrowBalance >= range.min && escrowBalance <= range.max) {
+                card.classList.add('active-plan');
+                card.style.borderColor = '#38bdf8';
+                card.style.boxShadow = '0 0 12px rgba(56, 189, 248, 0.3)';
+            } else {
+                card.style.borderColor = '';
+                card.style.boxShadow = '';
+            }
+        });
+    }
+
+    function updatePlanSuggestion(escrowBalance) {
+        const suggestionEl = document.getElementById('plan-suggestion');
+        if (!suggestionEl) return;
+        if (escrowBalance < 500) {
+            suggestionEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Escrow balance is below $500. Minimum required for Smart Plan A.';
+        } else if (escrowBalance >= 500 && escrowBalance <= 2000) {
+            suggestionEl.innerHTML = '<i class="fa-solid fa-check-circle text-emerald-400"></i> Your escrow balance matches Smart Plan A.';
+        } else if (escrowBalance >= 2001 && escrowBalance <= 10000) {
+            suggestionEl.innerHTML = '<i class="fa-solid fa-arrow-up text-blue-400"></i> Your escrow balance qualifies for Smart Plan B.';
+        } else if (escrowBalance >= 10001 && escrowBalance <= 50000) {
+            suggestionEl.innerHTML = '<i class="fa-solid fa-arrow-up text-blue-400"></i> Your escrow balance qualifies for Smart Plan C.';
+        } else if (escrowBalance >= 50001 && escrowBalance <= 200000) {
+            suggestionEl.innerHTML = '<i class="fa-solid fa-arrow-up text-blue-400"></i> Your escrow balance qualifies for Smart Plan D.';
+        } else if (escrowBalance >= 200001 && escrowBalance <= 500000) {
+            suggestionEl.innerHTML = '<i class="fa-solid fa-arrow-up text-blue-400"></i> Your escrow balance qualifies for Smart Plan E.';
+        } else if (escrowBalance >= 500001 && escrowBalance <= 3000000) {
+            suggestionEl.innerHTML = '<i class="fa-solid fa-arrow-up text-blue-400"></i> Your escrow balance qualifies for Smart Plan VIP.';
+        } else if (escrowBalance >= 3000001 && escrowBalance <= 10000000) {
+            suggestionEl.innerHTML = '<i class="fa-solid fa-arrow-up text-blue-400"></i> Your escrow balance qualifies for Crypto pulse Max.';
+        } else {
+            suggestionEl.innerHTML = '<i class="fa-solid fa-check-circle text-emerald-400"></i> Your escrow balance exceeds all plan ranges.';
+        }
+    }
+
+    function showActivePositions() {
+        fetch('/api/positions/active').then(r => r.json()).then(data => {
+            if (data.length === 0) {
+                alert('No active positions.');
+                return;
+            }
+            let content = '';
+            data.forEach(p => {
+                content += `<div class="bg-gray-900 border border-gray-800 p-3 rounded-xl mb-2 cursor-pointer" onclick="window.location.href='/plan-countdown/' + ${p.id}">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div class="text-white font-bold">${p.plan_name}</div>
+                            <div class="text-xs text-gray-400">$${p.escrow_amount} | ${p.daily_income_percent}% daily</div>
+                            <div class="text-[10px] text-gray-500">Started: ${p.start_time}</div>
+                        </div>
+                        <button onclick="stopPosition(${p.id})" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Stop</button>
+                    </div>
+                </div>`;
+            });
+            showPositionModal('Active Positions', content);
+        });
+    }
+
+    function showPositionHistory() {
+        fetch('/api/positions/history').then(r => r.json()).then(data => {
+            if (data.length === 0) {
+                alert('No position history.');
+                return;
+            }
+            let content = '';
+            data.forEach(p => {
+                const statusColor = p.status === 'completed' ? 'text-emerald-400' : 'text-rose-400';
+                const profitColor = p.total_income > 0 ? 'text-emerald-400' : 'text-gray-400';
+                content += `<div class="bg-gray-900 border border-gray-800 p-4 rounded-xl mb-2">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="text-white font-bold">${p.plan_name}</div>
+                        <div class="text-xs ${statusColor} font-bold">${p.status.toUpperCase()}</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-2">
+                        <div class="text-gray-400">Principal:</div>
+                        <div class="text-right text-white font-bold">$${p.escrow_amount.toFixed(2)}</div>
+                        <div class="text-gray-400">Daily Income:</div>
+                        <div class="text-right text-white font-bold">${p.daily_income_percent}%</div>
+                        <div class="text-gray-400">Total Profit:</div>
+                        <div class="text-right ${profitColor} font-bold">$${p.total_income.toFixed(2)}</div>
+                        <div class="text-gray-400">Final Amount:</div>
+                        <div class="text-right text-white font-bold">$${p.final_amount.toFixed(2)}</div>
+                    </div>
+                    <div class="text-[10px] text-gray-500 border-t border-gray-800 pt-2">
+                        Start: ${p.start_time}<br>End: ${p.end_time}
+                    </div>
+                </div>`;
+            });
+            showPositionModal('Position History', content);
+        });
+    }
+
+    function stopPosition(planId) {
+        if (!confirm('Stop this position? Principal will be returned without profit for today.')) return;
+        fetch('/api/positions/stop/' + planId, { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                alert(d.message);
+                if (d.success) {
+                    showActivePositions();
+                    fetchEscrowData();
+                }
+            });
+    }
+
+    function showPositionModal(title, content) {
+        let modal = document.getElementById('position-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'position-modal';
+            modal.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4';
+            modal.innerHTML = `<div class="bg-[#12161f] border border-gray-800 rounded-2xl p-6 w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="position-modal-title" class="text-lg font-bold text-white"></h3>
+                    <button onclick="closePositionModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <div id="position-modal-content" class="flex-1 overflow-y-auto"></div>
+            </div>`;
+            document.body.appendChild(modal);
+        }
+        document.getElementById('position-modal-title').innerText = title;
+        document.getElementById('position-modal-content').innerHTML = content;
+        modal.classList.remove('hidden');
+    }
+
+    function closePositionModal() {
+        const modal = document.getElementById('position-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    fetchEscrowData();
+</script>
+{% endblock %}

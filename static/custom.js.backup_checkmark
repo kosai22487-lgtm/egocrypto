@@ -1,0 +1,130 @@
+
+// Theme Manager
+(function(){
+    const validThemes = ['light', 'black', 'animated'];
+    const DEFAULT_THEME = 'animated';
+
+    function getTheme() {
+        return localStorage.getItem('egocrypto_theme') || DEFAULT_THEME;
+    }
+
+    function applyTheme(theme) {
+        if (!validThemes.includes(theme)) theme = DEFAULT_THEME;
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('egocrypto_theme', theme);
+
+        // Toggle particle canvas & blobs
+        const canvas = document.getElementById('particle-canvas');
+        const blobs = document.querySelectorAll('.background-blob');
+        if (theme === 'animated') {
+            if (canvas) canvas.style.display = 'block';
+            blobs.forEach(b => b.style.display = 'block');
+        } else {
+            if (canvas) canvas.style.display = 'none';
+            blobs.forEach(b => b.style.display = 'none');
+        }
+    }
+
+    // Expose globally
+    window.setTheme = function(theme) {
+        applyTheme(theme);
+        updateThemeSelectionUI();
+    };
+
+    function updateThemeSelectionUI() {
+        const current = getTheme();
+        document.querySelectorAll('[data-theme-option]').forEach(el => {
+            const val = el.getAttribute('data-theme-option');
+            if (val === current) {
+                el.classList.add('border-teal-500', 'bg-teal-500/20');
+            } else {
+                el.classList.remove('border-teal-500', 'bg-teal-500/20');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        applyTheme(getTheme());
+        updateThemeSelectionUI();
+    });
+})();
+
+// Particle Background only when animated theme
+(function(){
+    const theme = localStorage.getItem('egocrypto_theme') || 'animated';
+    if (theme !== 'animated') return;
+
+    const canvas = document.createElement('canvas');
+    canvas.id = 'particle-canvas';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    let width, height, particles = [];
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.size = Math.random() * 1.5 + 0.5;
+            this.speedY = Math.random() * 0.5 + 0.1;
+            this.speedX = Math.random() * 0.2 - 0.1;
+            this.opacity = Math.random() * 0.5 + 0.2;
+        }
+        update() {
+            this.y -= this.speedY;
+            this.x += this.speedX;
+            if (this.y < -10 || this.x < -10 || this.x > width + 10) this.reset();
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+})();
+
+// Add floating blobs only when animated theme
+document.addEventListener('DOMContentLoaded', () => {
+    const theme = localStorage.getItem('egocrypto_theme') || 'animated';
+    if (theme !== 'animated') return;
+    if (!document.querySelector('.background-blob')) {
+        const blobDiv = document.createElement('div');
+        blobDiv.innerHTML = `<div class="background-blob blob-1"></div><div class="background-blob blob-2"></div><div class="background-blob blob-3"></div>`;
+        document.body.appendChild(blobDiv);
+    }
+});
+
+// Smooth view switching (fade) for index.html
+if (typeof switchTab === 'function') {
+    const originalSwitch = switchTab;
+    window.switchTab = function(tab) {
+        const main = document.querySelector('main');
+        if (main) {
+            main.style.transition = 'opacity 0.3s';
+            main.style.opacity = '0';
+            setTimeout(() => {
+                originalSwitch(tab);
+                main.style.opacity = '1';
+            }, 300);
+        } else {
+            originalSwitch(tab);
+        }
+    };
+}

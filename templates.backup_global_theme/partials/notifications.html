@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-4 pb-20 text-gray-100">
+    <div class="flex items-center justify-between">
+        <button onclick="window.location.href='/'" class="text-gray-400 hover:text-white">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <h2 class="text-lg font-bold text-white">Notifications</h2>
+        <div class="w-6"></div>
+    </div>
+
+    <!-- Pin Message -->
+    <div id="pin-message-container"></div>
+
+    <!-- Crypto News -->
+    <div id="notifications-list" class="space-y-3">
+        <p class="text-center text-gray-400 py-4">Loading news...</p>
+    </div>
+</div>
+
+<script>
+    const container = document.getElementById('notifications-list');
+    const pinContainer = document.getElementById('pin-message-container');
+
+    // Pin message
+    fetch('/api/pin-message')
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                pinContainer.innerHTML = '<div class="bg-gradient-to-r from-blue-900/60 to-cyan-900/40 border border-blue-500/40 rounded-2xl p-4 mb-4 relative">' +
+                    '<button onclick="markPinRead(' + data.id + ')" class="absolute top-3 right-3 text-gray-400 hover:text-white text-xs">' +
+                    '<i class="fa-solid fa-check"></i> Mark as read</button>' +
+                    '<div class="flex items-start space-x-3">' +
+                    '<div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">' +
+                    '<i class="fa-solid fa-thumbtack text-blue-400"></i>' +
+                    '</div>' +
+                    '<div class="flex-1">' +
+                    '<div class="text-white font-bold text-sm">' + data.title + '</div>' +
+                    '<div class="text-xs text-gray-300 mt-1">' + data.message + '</div>' +
+                    '<div class="text-[10px] text-gray-400 mt-2">' + data.created_at + '</div>' +
+                    '</div></div></div>';
+            }
+        });
+
+    function markPinRead(pinId) {
+        fetch('/api/pin-message/read/' + pinId, { method: 'POST' })
+            .then(() => { pinContainer.innerHTML = ''; });
+    }
+
+    // Crypto news only
+    fetch('/api/notifications')
+        .then(r => r.json())
+        .then(data => {
+            let html = '';
+            if (data.length === 0) {
+                html = '<p class="text-center text-gray-400 py-6">No news available</p>';
+            } else {
+                data.forEach(n => {
+                    html += '<a href="' + (n.link || '#') + '" target="_blank" class="block bg-[#12161f] border border-gray-800 rounded-2xl p-4 hover:bg-gray-800/50 transition">' +
+                        '<div class="flex items-start space-x-3">' +
+                        '<div class="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center">' +
+                        '<i class="' + (n.icon || 'fa-solid fa-newspaper text-blue-400') + '"></i>' +
+                        '</div>' +
+                        '<div class="flex-1">' +
+                        '<div class="text-white font-bold text-sm">' + n.title + '</div>' +
+                        '<div class="text-xs text-gray-400 mt-1">' + n.message + '</div>' +
+                        '<div class="text-[10px] text-gray-500 mt-2">' + n.created_at + '</div>' +
+                        '</div></div></a>';
+                });
+            }
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            container.innerHTML = '<p class="text-center text-gray-400 py-6">Failed to load news</p>';
+        });
+</script>
+{% endblock %}

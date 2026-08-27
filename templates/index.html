@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egocrypto - Crypto Trading</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4">
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    function installApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    alert('Egocrypto installed successfully!');
+                }
+                deferredPrompt = null;
+            });
+        } else {
+            alert('Please use Chrome browser and tap "Add to Home Screen" from menu.');
+        }
+    }
+
+
+    function downloadApp() {
+        alert('Step 1: Tap the three dots at top right\nStep 2: Select Add to Home Screen\nStep 3: Tap Install');
+    }
+
+
+    function loadRecentTrade() {
+        fetch('/api/trade/history').then(r => r.json()).then(data => {
+            const container = document.getElementById('recent-trades-list');
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-center py-6">No trades yet</p>';
+                return;
+            }
+            const t = data[0];  // latest trade only
+            const resultColor = t.result === 'win' ? 'text-emerald-400' : t.result === 'loss' ? 'text-rose-400' : 'text-gray-400';
+            container.innerHTML = `
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl cursor-pointer" onclick="openTradeDetail(${t.id})">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-white font-bold">${t.symbol}</span>
+                        <span class="${resultColor} font-bold">${t.result ? t.result.toUpperCase() : t.status.toUpperCase()}</span>
+                    </div>
+                    <div class="text-gray-400">${t.trade_type.toUpperCase()} | $${t.amount.toFixed(2)} | ${t.duration}s</div>
+                </div>
+            `;
+        }).catch(err => {
+            document.getElementById('recent-trades-list').innerHTML = '<p class="text-center py-6">Failed to load trade</p>';
+        });
+    }
+
+    loadRecentTrade();
+
+
+    function loadMonthlyTradesCount() {
+        fetch('/api/trade/history').then(r => r.json()).then(data => {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const monthlyTrades = data.filter(t => {
+                const tradeDate = new Date(t.created_at);
+                return tradeDate.getMonth() === currentMonth && tradeDate.getFullYear() === currentYear;
+            });
+            document.getElementById('monthly-trades-count').innerText = monthlyTrades.length;
+        }).catch(err => {
+            document.getElementById('monthly-trades-count').innerText = '0';
+        });
+    }
+
+    loadMonthlyTradesCount();
+
+
+    // Prevent back button from logging out
+    history.pushState(null, '', location.href);
+    window.addEventListener('popstate', function() {
+        history.pushState(null, '', location.href);
+    });
+
+
+    function updateNotificationDot() {
+        fetch('/api/notifications').then(r => r.json()).then(data => {
+            const badge = document.getElementById('notification-badge');
+            if (badge) {
+                if (data.length > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        });
+    }
+
+    updateNotificationDot();
+
+</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #0b0e14; color: #e0e0e0; font-family: sans-serif; min-height: 100vh; margin: 0; }
+        .glass-card { background: rgba(18,22,31,0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 1.2rem; }
+        #sidebar { transform: translateX(-100%); transition: transform 0.3s ease-in-out; }
+        #sidebar.open { transform: translateX(0); }
+        #sidebar-backdrop { opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out; }
+        #sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
+        .sidebar-link { color: #9ca3af; cursor: pointer; }
+        .sidebar-link.active { background: rgba(13, 148, 136, 0.1); color: #2dd4bf; border: 1px solid rgba(45, 212, 191, 0.3); }
+        #wallet-coins-container { max-height: 60vh; overflow-y: auto; }
+    
+    .swift-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .swift-item:nth-child(1),
+    .swift-item:nth-child(2) {
+        flex: 1 1 calc(50% - 4px);
+        max-width: calc(50% - 4px);
+        padding: 4px;
+        min-width: calc(50% - 6px);
+        width: calc(50% - 6px);
+    }
+
+    .swift-item:nth-child(3),
+    .swift-item:nth-child(4) {
+        flex: 0 0 100%;
+    }
+
+</style>
+<link rel="manifest" href="/static/manifest.json">
+<link rel="stylesheet" href="/static/custom.css">
+</head>
+<body class="antialiased pb-36">
+
+    <div id="sidebar-backdrop" onclick="toggleMenu()" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden"></div>
+
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-gray-900 text-gray-300 z-50 flex flex-col justify-between shadow-2xl border-r border-gray-800">
+        <div class="overflow-y-auto px-4 py-6">
+            <div class="flex items-center justify-between mb-8 px-2">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl font-bold text-white tracking-wide">Egocrypto</span>
+                </div>
+                <button onclick="toggleMenu()" class="text-gray-400 hover:text-white focus:outline-none p-1 rounded-lg cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <nav class="space-y-1.5">
+                <a href="#" onclick="setActiveSidebar(this); switchTab('home'); toggleMenu();" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl font-medium">
+                    <i class="fa-solid fa-house w-5"></i><span>Dashboard</span>
+                </a>
+                <a href="/trading" onclick="setActiveSidebar(this); toggleMenu();" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-800/60 transition">
+                    <i class="fa-solid fa-right-left w-5"></i><span>Trading</span>
+                </a>
+                <a href="/markets" onclick="setActiveSidebar(this);" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-800/60 transition">
+                    <i class="fa-solid fa-chart-line w-5"></i><span>Markets</span>
+                </a>
+                <a href="#" onclick="setActiveSidebar(this); switchTab('wallet'); toggleMenu();" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-800/60 transition">
+                    <i class="fa-solid fa-wallet w-5"></i><span>Wallet</span>
+                </a>
+                <a href="/ai-arbitrage" onclick="setActiveSidebar(this);" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-800/60 transition">
+                    <i class="fa-solid fa-robot w-5"></i><span>AI Arbitrage</span>
+                </a>
+                <a href="#download" onclick="setActiveSidebar(this); toggleMenu();" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-800/60 transition">
+                    <i class="fa-solid fa-download w-5"></i><span>Download App</span>
+                </a>
+                <a href="/help" onclick="setActiveSidebar(this);" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-800/60 transition">
+                    <i class="fa-solid fa-circle-question w-5"></i><span>Help Center</span>
+                </a>
+                <a href="/notifications" onclick="setActiveSidebar(this);" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-800/60 transition">
+                    <i class="fa-solid fa-bell w-5"></i><span>Notifications</span><span id="notification-badge" class="ml-auto bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">!</span>
+                </a>
+                <a href="/support" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-800/60 transition"><i class="fa-solid fa-headset w-5"></i><span>Support</span></a>
+                <a href="/settings" onclick="setActiveSidebar(this);" class="sidebar-link flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-800/60 transition">
+                    <i class="fa-solid fa-gear w-5"></i><span>Settings</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <header class="flex justify-between items-center px-6 py-4">
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleMenu()" class="text-gray-300 hover:text-white text-xl p-1 bg-gray-900 border border-gray-800 rounded-xl w-10 h-10 flex items-center justify-center cursor-pointer">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <span class="text-teal-400 font-extrabold text-lg tracking-wider">Egocrypto</span>
+        </div>
+        <div class="flex items-center space-x-2">
+            <a href="/logout" class="text-xs font-semibold text-gray-400 hover:text-red-400 bg-gray-900 border border-gray-800 px-3.5 py-2 rounded-xl flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="px-5 pt-6 space-y-5 max-w-lg mx-auto">
+
+        <div id="view-home" class="space-y-5">
+            <div class="space-y-1">
+                <h1 id="welcome-title" class="text-2xl font-extrabold text-white tracking-tight">Welcome back</h1>
+                <p id="live-time" class="text-xs text-gray-400 flex items-center space-x-1.5 font-medium">
+                    <i class="fa-regular fa-clock"></i> <span id="time-string">Loading time...</span>
+                </p>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div id="user-id-badge" class="inline-flex items-center bg-gray-900 border border-gray-800 text-teal-400 text-xs px-4 py-2 rounded-xl font-mono font-semibold whitespace-nowrap">
+                    <span>User ID: Loading...</span>
+                </div>
+                <div class="flex space-x-2">
+                    <a href="#download" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center space-x-1.5 transition">
+                        <i class="fa-solid fa-download text-teal-400"></i> <span>Download</span>
+                    </a>
+                    <a href="/trading" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center space-x-1.5 shadow-lg shadow-indigo-600/20 transition cursor-pointer">
+                        <span>Start Trading</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Balance Card with Eye Toggle -->
+            <div class="glass-card p-6 relative overflow-hidden shadow-xl">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-[11px] text-gray-400 uppercase tracking-widest font-bold">Balance</p>
+                        <div class="flex items-center space-x-2">
+                            <h2 id="balance-val" class="text-3xl font-extrabold text-white mt-1">$0.00</h2>
+                            <i id="dashboard-eye-icon" class="fa-regular fa-eye text-gray-400 cursor-pointer text-xl hover:text-white transition" onclick="toggleDashboardBalanceVisibility()"></i>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Available funds</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                        <i class="fa-solid fa-dollar-sign text-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Trades Card -->
+            <div class="glass-card p-6 relative overflow-hidden shadow-xl">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-[11px] text-gray-400 uppercase tracking-widest font-bold">Total Trades</p>
+                        <h2 id="monthly-trades-count" class="text-3xl font-extrabold text-white mt-1">0</h2>
+                        <p class="text-xs text-gray-400 mt-1">30D Trades</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                        <i class="fa-solid fa-wave-square text-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BTC Price Card -->
+            <div class="glass-card p-6 relative overflow-hidden shadow-xl">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-[11px] text-gray-400 uppercase tracking-widest font-bold">BTC PRICE</p>
+                        <h2 id="btc-main-price" class="text-3xl font-extrabold text-white mt-1">$--.--</h2>
+                        <p id="btc-change" class="text-xs font-bold text-emerald-400 mt-1 flex items-center space-x-1">
+                            <i class="fa-solid fa-satellite-dish text-[10px]"></i> <span>Live Price</span>
+                        </p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                        <i class="fa-solid fa-arrow-trend-up text-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portfolio Card -->
+            <div id="portfolio-card" class="glass-card p-6 relative overflow-hidden shadow-xl">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-[11px] text-gray-400 uppercase tracking-widest font-bold">Portfolio</p>
+                        <h2 id="portfolio-status" class="text-2xl font-extrabold text-white mt-1">Inactive</h2>
+                        <p id="portfolio-subtitle" class="text-xs text-gray-400 mt-1">Deposit to begin</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-wallet text-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deposit Required Card -->
+            <div id="deposit-required-card" class="glass-card p-6 border-amber-500/30 bg-amber-500/[0.02] shadow-xl space-y-4">
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Deposit Required</h3>
+                        <p class="text-xs text-gray-400 mt-1 leading-relaxed">Your account balance is $0.00. You must make a deposit before you can begin using the trading features. Deposits require administrator approval before they are credited to your account.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="openDepositView()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-bold py-3 rounded-xl flex items-center justify-center space-x-2 transition cursor-pointer">
+                    <span>Request Deposit</span><i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                </button>
+            </div>
+
+            <!-- Market Overview -->
+            <div class="space-y-3">
+                <h3 class="text-lg font-bold text-white">Market Overview</h3>
+                <div class="swift-container">
+                    <div class="swift-item glass-card p-4 space-y-2 text-center">
+                        <div class="flex items-center justify-center space-x-1.5 text-xs text-gray-400 font-semibold"><i class="fa-brands fa-bitcoin text-amber-400"></i><span>BTC /USD</span></div>
+                        <div id="btc-grid-price" class="text-lg font-extrabold text-white">$--.--</div>
+                        <div class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-satellite-dish text-[10px]"></i> Live</div>
+                    </div>
+                    <div class="swift-item glass-card p-4 space-y-2 text-center">
+                        <div class="flex items-center justify-center space-x-1.5 text-xs text-gray-400 font-semibold"><i class="fa-brands fa-ethereum text-indigo-400"></i><span>ETH /USD</span></div>
+                        <div id="eth-grid-price" class="text-lg font-extrabold text-white">$--.--</div>
+                        <div class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-satellite-dish text-[10px]"></i> Live</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Trades -->
+            <div class="glass-card p-6 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white">Recent Trades</h3>
+                    <button type="button" onclick="openHistoryModal()" class="text-xs text-teal-400 hover:underline">View All</button>
+                </div>
+                <div id="recent-trades-list" class="space-y-2 text-xs text-gray-400">
+                    <p class="text-center py-6">No trades yet</p>
+                </div>
+            </div>
+
+            <div id="download" class="glass-card p-6 text-center space-y-4 shadow-xl">
+                <div class="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/30 text-blue-500 flex items-center justify-center mx-auto text-xl"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                <div class="space-y-1"><h3 class="text-lg font-bold text-white">Get the Egocrypto App</h3><p class="text-xs text-gray-400">Trade on the go. Download our mobile app for iOS and Android.</p></div>
+                <button type="button" onclick="downloadApp()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center space-x-2 transition shadow-lg cursor-pointer"><i class="fa-solid fa-download"></i><span>Download App</span></button>
+            </div>
+        </div>
+
+        <!-- WALLET VIEW -->
+        <div id="view-wallet" class="space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2 bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-xl">
+                    <div class="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center text-xs font-bold text-black">W</div>
+                    <span class="text-white text-xs font-bold">Main Wallet</span>
+                </div>
+            </div>
+
+            <div class="text-center space-y-1">
+                <div class="inline-flex items-center space-x-1 text-xs text-gray-400 font-medium cursor-pointer"><span>All Mainnets</span><i class="fa-solid fa-chevron-down text-[10px]"></i></div>
+                <div class="flex items-center justify-center space-x-2">
+                    <h2 id="wallet-total-balance" class="text-4xl font-black text-white">$0.00</h2>
+                    <i id="wallet-eye-icon" class="fa-regular fa-eye text-gray-400 cursor-pointer" onclick="toggleWalletBalanceVisibility()"></i>
+                </div>
+                <p class="text-xs text-emerald-400 font-bold">+$0.00 +0.00%</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 pt-2">
+                <button type="button" onclick="openWithdrawModal()" class="flex flex-col items-center space-y-2 group cursor-pointer"><div class="w-14 h-14 rounded-2xl bg-[#1e88e5] hover:bg-blue-600 flex items-center justify-center text-white text-xl shadow-lg shadow-blue-500/20 transition"><i class="fa-solid fa-paper-plane"></i></div><span class="text-xs font-bold text-white">Withdraw</span></button>
+                <button type="button" onclick="openDepositView()" class="flex flex-col items-center space-y-2 group cursor-pointer"><div class="w-14 h-14 rounded-2xl bg-[#1e88e5] hover:bg-blue-600 flex items-center justify-center text-white text-xl shadow-lg shadow-blue-500/20 transition"><i class="fa-solid fa-arrow-down"></i></div><span class="text-xs font-bold text-white">Deposit</span></button>
+                <button type="button" onclick="openHistoryModal()" class="flex flex-col items-center space-y-2 group cursor-pointer"><div class="w-14 h-14 rounded-2xl bg-[#1e88e5] hover:bg-blue-600 flex items-center justify-center text-white text-xl shadow-lg shadow-blue-500/20 transition"><i class="fa-solid fa-clock-rotate-left"></i></div><span class="text-xs font-bold text-white">Trade History</span></button>
+            </div>
+
+            <div class="flex justify-around border-b border-gray-800 text-sm font-bold text-gray-400 pb-2 pt-2">
+                <button type="button" onclick="switchWalletTab('crypto')" id="wallet-tab-crypto" class="text-white border-b-2 border-white pb-2 focus:outline-none">Crypto</button>
+                <button type="button" onclick="switchWalletTab('earn')" id="wallet-tab-earn" class="hover:text-white cursor-pointer pb-2 focus:outline-none">Earn</button>
+                <button type="button" onclick="switchWalletTab('nfts')" id="wallet-tab-nfts" class="hover:text-white cursor-pointer pb-2 focus:outline-none">NFTs</button>
+            </div>
+
+            <div id="wallet-coins-container" class="space-y-2">
+                <p class="text-center text-gray-400 py-4 text-xs">Loading balances...</p>
+            </div>
+            <!-- Earn Tab Content -->
+            <div id="wallet-earn-container" class="space-y-3 hidden">
+                <p class="text-center text-gray-400 py-4 text-xs">Loading earn plans...</p>
+            </div>
+            <!-- NFTs Tab Content -->
+            <div id="wallet-nfts-container" class="space-y-3 hidden">
+                <p class="text-center text-gray-400 py-4 text-xs">Loading NFTs...</p>
+            </div>
+        </div>
+
+        <!-- DEPOSIT VIEW -->
+        <div id="view-deposit" class="space-y-6 hidden">
+            <div class="flex items-center justify-between mb-2"><h2 class="text-xl font-bold text-white">Add Funds</h2><button type="button" onclick="switchTab('wallet')" class="text-xs text-gray-400 hover:text-white bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-lg cursor-pointer">Back</button></div>
+            <p class="text-xs text-gray-400">Send crypto to one of the addresses below, then submit your request.</p>
+            <div class="space-y-4">
+                <div class="glass-card p-4 space-y-2"><div class="flex justify-between items-center"><span class="text-sm font-bold text-white">BTC</span><span class="bg-amber-950/80 border border-amber-800 text-amber-400 text-[10px] font-bold px-2.5 py-0.5 rounded">BTC</span></div><div class="flex items-center justify-between bg-[#131722] border border-gray-800 p-2.5 rounded-xl"><span id="addr-deposit-btc" class="text-xs font-mono text-gray-300 truncate mr-2 select-all">Loading...</span><button type="button" onclick="copyAddress('addr-deposit-btc','copied-deposit-btc')" class="text-gray-400 hover:text-white cursor-pointer bg-gray-800/80 hover:bg-gray-700 p-2 rounded-lg shrink-0 transition"><i class="fa-regular fa-copy text-xs"></i></button></div><div class="text-right"><span id="copied-deposit-btc" class="text-teal-400 text-[10px] font-bold hidden">Copied to clipboard!</span></div></div>
+                <div class="glass-card p-4 space-y-2"><div class="flex justify-between items-center"><span class="text-sm font-bold text-white">ETH</span><span class="bg-indigo-950/80 border border-indigo-800 text-indigo-400 text-[10px] font-bold px-2.5 py-0.5 rounded">ETH</span></div><div class="flex items-center justify-between bg-[#131722] border border-gray-800 p-2.5 rounded-xl"><span id="addr-deposit-eth" class="text-xs font-mono text-gray-300 truncate mr-2 select-all">Loading...</span><button type="button" onclick="copyAddress('addr-deposit-eth','copied-deposit-eth')" class="text-gray-400 hover:text-white cursor-pointer bg-gray-800/80 hover:bg-gray-700 p-2 rounded-lg shrink-0 transition"><i class="fa-regular fa-copy text-xs"></i></button></div><div class="text-right"><span id="copied-deposit-eth" class="text-teal-400 text-[10px] font-bold hidden">Copied to clipboard!</span></div></div>
+                <div class="glass-card p-4 space-y-2"><div class="flex justify-between items-center"><span class="text-sm font-bold text-white">USDT (ERC20)</span><span class="bg-blue-950/80 border border-blue-800 text-blue-400 text-[10px] font-bold px-2.5 py-0.5 rounded">ERC20</span></div><div class="flex items-center justify-between bg-[#131722] border border-gray-800 p-2.5 rounded-xl"><span id="addr-deposit-usdc" class="text-xs font-mono text-gray-300 truncate mr-2 select-all">Loading...</span><button type="button" onclick="copyAddress('addr-deposit-usdc','copied-deposit-usdc')" class="text-gray-400 hover:text-white cursor-pointer bg-gray-800/80 hover:bg-gray-700 p-2 rounded-lg shrink-0 transition"><i class="fa-regular fa-copy text-xs"></i></button></div><div class="text-right"><span id="copied-deposit-usdc" class="text-teal-400 text-[10px] font-bold hidden">Copied to clipboard!</span></div></div>
+
+                <div class="glass-card p-5 space-y-3">
+                    <h3 class="text-sm font-bold text-white">Submit Deposit Request</h3>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Amount (USD)</label>
+                        <input type="text" id="deposit-amount" placeholder="0.00" class="w-full bg-[#131722] border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Coin</label>
+                        <select id="deposit-coin" class="w-full bg-[#131722] border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-teal-500">
+                            <option value="BTC">BTC</option>
+                            <option value="ETH">ETH</option>
+                            <option value="USDT">USDT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1">Transaction Hash</label>
+                        <input type="text" id="deposit-tx" placeholder="Transaction Hash" class="w-full bg-[#131722] border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-teal-500">
+                    </div>
+                    <button type="button" onclick="submitDepositRequest()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg cursor-pointer">Submit Deposit Request</button>
+                    <p class="text-[11px] text-gray-500 pb-4">Deposits are manually reviewed and approved by the administrator.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center pt-4 space-y-1 border-t border-gray-800/60 pb-12">
+            <p class="text-[11px] text-gray-500">Egocrypto - Secure - Professional - Institutional-Grade</p>
+            <p class="text-xs text-teal-400 font-medium"><span onclick="openCustomerService()" class="cursor-pointer">customer service</span></p>
+        </div>
+    </main>
+
+    <!-- Action Modal -->
+    <div id="action-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex flex-col justify-end max-w-lg mx-auto transition-opacity duration-300">
+        <div class="bg-[#12161f] border-t border-gray-800 rounded-t-3xl p-6 space-y-3 shadow-2xl">
+            <div class="w-12 h-1 bg-gray-700 rounded-full mx-auto mb-2"></div>
+            <div class="swift-container">
+                <button type="button" class="swift-item bg-[#1a212e] hover:bg-gray-800 border border-gray-800/80 p-4 rounded-2xl text-left cursor-pointer" onclick="openWithdrawModal()">
+                    <div class="text-white font-bold text-sm">Withdraw</div>
+                    <div class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mt-2">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </div>
+                </button>
+                <button type="button" class="swift-item bg-[#1a212e] hover:bg-gray-800 border border-gray-800/80 p-4 rounded-2xl text-left cursor-pointer" onclick="openDepositView(); toggleActionModal();">
+                    <div class="text-white font-bold text-sm">Deposit</div>
+                    <div class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mt-2">
+                        <i class="fa-solid fa-arrow-down text-xs"></i>
+                    </div>
+                </button>
+                <a href="/trading" class="swift-item bg-[#1a212e] border border-gray-800/80 p-4 rounded-2xl flex items-center justify-between cursor-pointer">
+                    <div>
+                        <div class="text-white font-bold text-sm">Trading</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Start crypto trading and analysis</div>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center shrink-0 justify-center text-xs">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                </a>
+                <a href="/convert" class="swift-item bg-[#1a212e] border border-gray-800/80 p-4 rounded-2xl flex items-center justify-between cursor-pointer">
+                    <div>
+                        <div class="text-white font-bold text-sm">Coin Convert</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Swap and convert your crypto tokens easily</div>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center shrink-0 justify-center text-xs">
+                        <i class="fa-solid fa-rotate"></i>
+                    </div>
+                </a>
+            </div>
+            <div class="pt-4 flex justify-center">
+                <button type="button" onclick="toggleActionModal()" class="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div id="withdraw-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#12161f] border border-gray-800 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Withdraw Crypto</h3>
+                <button type="button" onclick="closeWithdrawModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 text-xs text-gray-400 flex justify-between">
+                <span>Available Balance:</span>
+                <span id="modal-balance" class="text-white font-bold">$0.00</span>
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs text-gray-400 font-semibold">Withdrawal Amount ($)</label>
+                <input type="number" id="withdraw-amount" oninput="checkWithdrawLimit()" placeholder="0.00" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+                <p id="exceed-error" class="text-xs text-red-500 font-semibold hidden mt-1">Exceeds available balance</p>
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs text-gray-400 font-semibold">Wallet Address</label>
+                <input type="text" id="withdraw-address" placeholder="Enter wallet address" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+            </div>
+            <button id="confirm-withdraw-btn" type="button" onclick="submitWithdraw()" disabled class="w-full bg-blue-600/50 text-white font-bold py-3 rounded-xl text-sm transition cursor-not-allowed">Confirm Withdrawal</button>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#12161f] border border-gray-800 rounded-2xl p-6 w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-white">Transaction History</h3>
+                <button type="button" onclick="closeHistoryModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="history-list" class="flex-1 overflow-y-auto space-y-2 text-xs">
+                <p class="text-center text-gray-400 py-6">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-[#0b0e14] border-t border-gray-800/80 px-12 pt-4 pb-6 z-40 max-w-lg mx-auto flex justify-between items-center shadow-2xl">
+        <button type="button" onclick="switchTab('home')" id="nav-home-btn" class="flex flex-col items-center justify-center w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-400 transition shadow-lg cursor-pointer">
+            <i class="fa-solid fa-house text-lg"></i>
+        </button>
+        <button onclick="toggleActionModal()" class="flex flex-col items-center -mt-8 cursor-pointer bg-transparent border-0 p-0">
+            <div class="w-14 h-14 rounded-full bg-[#1e88e5] hover:bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 transition border-4 border-[#0b0e14]">
+                <svg class="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 8h14l-3-3"></path>
+                    <path d="M20 16H6l3 3"></path>
+                </svg>
+            </div>
+        </button>
+        <button type="button" onclick="switchTab('wallet')" id="nav-wallet-btn" class="flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-gray-400 hover:text-gray-300 transition cursor-pointer">
+            <i class="fa-solid fa-wallet text-lg"></i>
+        </button>
+    </nav>
+
+    <script>
+        let currentBalance = 0;
+        let dashboardBalanceVisible = true;
+        let walletBalanceVisible = true;
+
+        function setActiveSidebar(el) {
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString(undefined, {
+                weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+            });
+            const timeEl = document.getElementById('time-string');
+            if(timeEl) timeEl.innerText = timeStr;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        fetch('/api/data').then(r => r.json()).then(d => {
+            currentBalance = d.balance;
+            document.getElementById('welcome-title').innerText = 'Welcome back, ' + d.name;
+            document.getElementById('user-id-badge').innerHTML = '<span>User ID: ' + d.id + '</span>';
+            updateDashboardBalance();
+            document.getElementById('modal-balance').innerText = '$' + d.balance.toFixed(2);
+            updateWalletTotalBalanceDisplay();
+            updatePortfolioAndDepositCards();
+            fetchWalletBalances();
+        }).catch(err => console.error('API Error:', err));
+
+        function switchTab(tab) {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-wallet').classList.add('hidden');
+            document.getElementById('view-deposit').classList.add('hidden');
+            const homeBtn = document.getElementById('nav-home-btn');
+            const walletBtn = document.getElementById('nav-wallet-btn');
+            if(tab === 'home') {
+                document.getElementById('view-home').classList.remove('hidden');
+                homeBtn.className = "flex flex-col items-center justify-center w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-400 transition shadow-lg cursor-pointer";
+                walletBtn.className = "flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-gray-400 hover:text-gray-300 transition cursor-pointer";
+            } else if(tab === 'wallet') {
+                document.getElementById('view-wallet').classList.remove('hidden');
+                walletBtn.className = "flex flex-col items-center justify-center w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-400 transition shadow-lg cursor-pointer";
+                homeBtn.className = "flex flex-col items-center justify-center w-12 h-12 rounded-2xl text-gray-400 hover:text-gray-300 transition cursor-pointer";
+                fetchWalletBalances();
+            }
+        }
+
+        function openDepositView() {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-wallet').classList.add('hidden');
+            document.getElementById('view-deposit').classList.remove('hidden');
+            loadDepositAddresses();
+        }
+
+        function toggleDashboardBalanceVisibility() {
+            dashboardBalanceVisible = !dashboardBalanceVisible;
+            updateDashboardBalance();
+        }
+
+        function updateDashboardBalance() {
+            const el = document.getElementById('balance-val');
+            const icon = document.getElementById('dashboard-eye-icon');
+            if(dashboardBalanceVisible) {
+                el.innerText = '$' + currentBalance.toFixed(2);
+                icon.className = "fa-regular fa-eye text-gray-400 cursor-pointer text-xl hover:text-white transition";
+            } else {
+                el.innerText = '••••••';
+                icon.className = "fa-regular fa-eye-slash text-gray-400 cursor-pointer text-xl hover:text-white transition";
+            }
+        }
+
+        function toggleWalletBalanceVisibility() {
+            walletBalanceVisible = !walletBalanceVisible;
+            updateWalletTotalBalanceDisplay();
+        }
+
+        function updateWalletTotalBalanceDisplay() {
+            const el = document.getElementById('wallet-total-balance');
+            const icon = document.getElementById('wallet-eye-icon');
+            if(walletBalanceVisible) {
+                el.innerText = '$' + currentBalance.toFixed(2);
+                icon.className = "fa-regular fa-eye text-gray-400 cursor-pointer text-xl hover:text-white transition";
+            } else {
+                el.innerText = '••••••';
+                icon.className = "fa-regular fa-eye-slash text-gray-400 cursor-pointer text-xl hover:text-white transition";
+            }
+        }
+
+        function updatePortfolioAndDepositCards() {
+            const portfolioCard = document.getElementById('portfolio-card');
+            const depositCard = document.getElementById('deposit-required-card');
+            const statusEl = document.getElementById('portfolio-status');
+            const subEl = document.getElementById('portfolio-subtitle');
+            if(currentBalance > 0) {
+                portfolioCard.classList.remove('hidden');
+                if(depositCard) depositCard.classList.add('hidden');
+                statusEl.innerText = 'Active ($' + currentBalance.toFixed(2) + ')';
+                subEl.innerText = 'Portfolio is active';
+            } else {
+                portfolioCard.classList.remove('hidden');
+                if(depositCard) depositCard.classList.remove('hidden');
+                statusEl.innerText = 'Inactive';
+                subEl.innerText = 'Deposit to begin';
+            }
+        }
+
+        function toggleMenu() {
+            const sb = document.getElementById('sidebar');
+            const bd = document.getElementById('sidebar-backdrop');
+            sb.classList.toggle('open');
+            bd.classList.toggle('open');
+        }
+
+        function toggleActionModal() {
+            const m = document.getElementById('action-modal');
+            m.classList.toggle('hidden');
+        }
+
+        function openWithdrawModal() {
+            // Check passcode status first
+            fetch('/api/user/passcode-status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.has_passcode) {
+                        document.getElementById('withdraw-modal').classList.remove('hidden');
+                        toggleActionModal();
+                    } else {
+                        alert('Passcode is required for withdrawal. Please set a passcode in Settings > Security > Set Passcode.');
+                        window.location.href = '/settings';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Unable to verify passcode status. Please try again.');
+                });
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdraw-modal').classList.add('hidden');
+        }
+
+        function openHistoryModal() {
+            document.getElementById('history-modal').classList.remove('hidden');
+            fetchHistory();
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('history-modal').classList.add('hidden');
+        }
+
+        function copyAddress(elId, spanId) {
+            const text = document.getElementById(elId).innerText;
+            navigator.clipboard.writeText(text);
+            const s = document.getElementById(spanId);
+            s.classList.remove('hidden');
+            setTimeout(() => s.classList.add('hidden'), 2000);
+        }
+
+        function submitDepositRequest() {
+            const amount = document.getElementById('deposit-amount').value;
+            const coin = document.getElementById('deposit-coin').value;
+            const tx_hash = document.getElementById('deposit-tx').value;
+            if(!amount || !tx_hash) {
+                alert('Please fill in all fields.');
+                return;
+            }
+            fetch('/api/deposit-request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({amount, coin, tx_hash})
+            }).then(r => r.json()).then(d => {
+                if(d.success) {
+                    alert('Deposit request submitted successfully.');
+                    switchTab('home');
+                } else {
+                    alert(d.error || 'Error submitting request');
+                }
+            });
+        }
+
+        function loadDepositAddresses() {
+            fetch('/api/deposit-addresses').then(r => r.json()).then(d => {
+                if(d.BTC) document.getElementById('addr-deposit-btc').innerText = d.BTC;
+                if(d.ETH) document.getElementById('addr-deposit-eth').innerText = d.ETH;
+                if(d.USDT) document.getElementById('addr-deposit-usdc').innerText = d.USDT;
+            });
+        }
+
+        function fetchWalletBalances() {
+            fetch('/api/wallet/all').then(r => r.json()).then(d => {
+                const c = document.getElementById('wallet-coins-container');
+                let html = '';
+                d.forEach(coin => {
+                    html += `<div class="glass-card p-4 flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <img src="https://assets.coincap.io/assets/icons/${coin.symbol.toLowerCase()}@2x.png" alt="${coin.symbol}" class="w-8 h-8 rounded-full" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center font-bold text-white" style="display:none;">${coin.symbol}</div>
+                            <div>
+                                <div class="text-white font-bold text-sm">${coin.name}</div>
+                                <div class="text-xs text-gray-400">Balance</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-white font-bold text-sm">${coin.balance.toFixed(4)}</div>
+                            <div class="text-xs text-emerald-400">${coin.symbol}</div>
+                        </div>
+                    </div>`;
+                });
+                c.innerHTML = html;
+            });
+        }
+
+        function checkWithdrawLimit() {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value);
+            const btn = document.getElementById('confirm-withdraw-btn');
+            const err = document.getElementById('exceed-error');
+            if(amt > currentBalance) {
+                err.classList.remove('hidden');
+                btn.disabled = true;
+                btn.className = "w-full bg-blue-600/50 text-white font-bold py-3 rounded-xl text-sm transition cursor-not-allowed";
+            } else {
+                err.classList.add('hidden');
+                if(amt > 0) {
+                    btn.disabled = false;
+                    btn.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm transition shadow-lg cursor-pointer";
+                }
+            }
+        }
+
+        function submitWithdraw() {
+            const amount = document.getElementById('withdraw-amount').value;
+            const address = document.getElementById('withdraw-address').value;
+            const passcode = document.getElementById('withdraw-passcode').value;
+            if(!amount || !address || !passcode) {
+                alert('Please enter amount, address, and passcode.');
+                return;
+            }
+            fetch('/api/withdraw-request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({amount, address, passcode})
+            }).then(r => r.json()).then(d => {
+                if(d.success) {
+                    alert('Withdrawal request submitted.');
+                    closeWithdrawModal();
+                } else {
+                    alert(d.error || 'Withdrawal failed');
+                }
+            });
+        }
+
+        function fetchHistory() {
+            fetch('/api/transactions').then(r => r.json()).then(d => {
+                const h = document.getElementById('history-list');
+                if(d.length === 0) {
+                    h.innerHTML = '<p class="text-center text-gray-400 py-6">No transaction history found.</p>';
+                    return;
+                }
+                let html = '';
+                d.forEach(item => {
+                    html += `<div class="bg-gray-900 border border-gray-800 p-3 rounded-xl flex justify-between items-center">
+                        <div>
+                            <div class="text-white font-bold">${item.type}</div>
+                            <div class="text-[10px] text-gray-400">${item.created_at}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-teal-400 font-bold">$${item.amount.toFixed(2)}</div>
+                            <div class="text-[10px] text-yellow-500">${item.description}</div>
+                        </div>
+                    </div>`;
+                });
+                h.innerHTML = html;
+            });
+        }
+// Live Price from CoinGecko API
+        function fetchLivePrices() {
+            fetch('/api/coingecko/prices')
+                .then(r => r.json())
+                .then(data => {
+                    const btcP = parseFloat(data.btc.replace(/,/g, '')) || 0;
+                    const ethP = parseFloat(data.eth.replace(/,/g, '')) || 0;
+                    const el1 = document.getElementById('btc-main-price');
+                    const el2 = document.getElementById('btc-grid-price');
+                    const el3 = document.getElementById('eth-grid-price');
+                    if(el1 && btcP > 0) el1.innerText = '$' + btcP.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    if(el2 && btcP > 0) el2.innerText = '$' + btcP.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    if(el3 && ethP > 0) el3.innerText = '$' + ethP.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                });
+        }
+        fetchLivePrices();
+        setInterval(fetchLivePrices, 30000);
+    
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    function installApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    alert('Egocrypto installed successfully!');
+                }
+                deferredPrompt = null;
+            });
+        } else {
+            alert('Please use Chrome browser and tap "Add to Home Screen" from menu.');
+        }
+    }
+
+
+    function downloadApp() {
+        alert('Step 1: Tap the three dots at top right\nStep 2: Select Add to Home Screen\nStep 3: Tap Install');
+    }
+
+
+    function loadRecentTrade() {
+        fetch('/api/trade/history').then(r => r.json()).then(data => {
+            const container = document.getElementById('recent-trades-list');
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-center py-6">No trades yet</p>';
+                return;
+            }
+            const t = data[0];  // latest trade only
+            const resultColor = t.result === 'win' ? 'text-emerald-400' : t.result === 'loss' ? 'text-rose-400' : 'text-gray-400';
+            container.innerHTML = `
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl cursor-pointer" onclick="openTradeDetail(${t.id})">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-white font-bold">${t.symbol}</span>
+                        <span class="${resultColor} font-bold">${t.result ? t.result.toUpperCase() : t.status.toUpperCase()}</span>
+                    </div>
+                    <div class="text-gray-400">${t.trade_type.toUpperCase()} | $${t.amount.toFixed(2)} | ${t.duration}s</div>
+                </div>
+            `;
+        }).catch(err => {
+            document.getElementById('recent-trades-list').innerHTML = '<p class="text-center py-6">Failed to load trade</p>';
+        });
+    }
+
+    loadRecentTrade();
+
+
+    function loadMonthlyTradesCount() {
+        fetch('/api/trade/history').then(r => r.json()).then(data => {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const monthlyTrades = data.filter(t => {
+                const tradeDate = new Date(t.created_at);
+                return tradeDate.getMonth() === currentMonth && tradeDate.getFullYear() === currentYear;
+            });
+            document.getElementById('monthly-trades-count').innerText = monthlyTrades.length;
+        }).catch(err => {
+            document.getElementById('monthly-trades-count').innerText = '0';
+        });
+    }
+
+    loadMonthlyTradesCount();
+
+
+    // Prevent back button from logging out
+    history.pushState(null, '', location.href);
+    window.addEventListener('popstate', function() {
+        history.pushState(null, '', location.href);
+    });
+
+
+    function updateNotificationDot() {
+        fetch('/api/notifications').then(r => r.json()).then(data => {
+            const badge = document.getElementById('notification-badge');
+            if (badge) {
+                if (data.length > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        });
+    }
+
+    updateNotificationDot();
+
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/static/sw.js");
+}
+
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    function installApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    alert('Egocrypto installed successfully!');
+                }
+                deferredPrompt = null;
+            });
+        } else {
+            alert('Please use Chrome browser and tap "Add to Home Screen" from menu.');
+        }
+    }
+
+
+    function downloadApp() {
+        alert('Step 1: Tap the three dots at top right\nStep 2: Select Add to Home Screen\nStep 3: Tap Install');
+    }
+
+
+    function loadRecentTrade() {
+        fetch('/api/trade/history').then(r => r.json()).then(data => {
+            const container = document.getElementById('recent-trades-list');
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-center py-6">No trades yet</p>';
+                return;
+            }
+            const t = data[0];  // latest trade only
+            const resultColor = t.result === 'win' ? 'text-emerald-400' : t.result === 'loss' ? 'text-rose-400' : 'text-gray-400';
+            container.innerHTML = `
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl cursor-pointer" onclick="openTradeDetail(${t.id})">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-white font-bold">${t.symbol}</span>
+                        <span class="${resultColor} font-bold">${t.result ? t.result.toUpperCase() : t.status.toUpperCase()}</span>
+                    </div>
+                    <div class="text-gray-400">${t.trade_type.toUpperCase()} | $${t.amount.toFixed(2)} | ${t.duration}s</div>
+                </div>
+            `;
+        }).catch(err => {
+            document.getElementById('recent-trades-list').innerHTML = '<p class="text-center py-6">Failed to load trade</p>';
+        });
+    }
+
+    loadRecentTrade();
+
+
+    function loadMonthlyTradesCount() {
+        fetch('/api/trade/history').then(r => r.json()).then(data => {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const monthlyTrades = data.filter(t => {
+                const tradeDate = new Date(t.created_at);
+                return tradeDate.getMonth() === currentMonth && tradeDate.getFullYear() === currentYear;
+            });
+            document.getElementById('monthly-trades-count').innerText = monthlyTrades.length;
+        }).catch(err => {
+            document.getElementById('monthly-trades-count').innerText = '0';
+        });
+    }
+
+    loadMonthlyTradesCount();
+
+
+    // Prevent back button from logging out
+    history.pushState(null, '', location.href);
+    window.addEventListener('popstate', function() {
+        history.pushState(null, '', location.href);
+    });
+
+
+    function updateNotificationDot() {
+        fetch('/api/notifications').then(r => r.json()).then(data => {
+            const badge = document.getElementById('notification-badge');
+            if (badge) {
+                if (data.length > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        });
+    }
+
+    updateNotificationDot();
+
+</script>
+<script src="/static/wallet_tabs.js"></script>
+
+
+
+<script src="/static/customer_service.js"></script>
+
+    <script>
+        function openCustomerService() {
+            window.location.href = '/support';
+        }
+            fetch('/api/get-settings')
+                .then(r => r.json())
+                .then(data => {
+                    const telegram = data.telegram_link;
+                    const whatsapp = data.whatsapp_number;
+                    if (telegram) {
+                        window.location.href = telegram;
+                    } else if (whatsapp) {
+                        window.open('https://wa.me/' + whatsapp.replace(/\+/g, ''), '_blank');
+                    }
+                });
+        }
+    </script>
+
+<script src="/static/custom.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-4 pb-20 text-gray-100 max-w-md mx-auto pt-4">
+
+    <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl p-5 shadow-xl space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-right-left text-teal-400"></i> Crypto Converter
+            </h2>
+            <span class="text-[10px] bg-teal-500/10 text-teal-400 px-2.5 py-1 rounded-full font-mono">INSTANT</span>
+        </div>
+
+        <div class="space-y-3">
+            <!-- From Section -->
+            <div>
+                <label class="text-xs text-gray-400 block mb-1.5 font-medium">From</label>
+                <div class="flex gap-2">
+                    <input type="number" id="from-amount" placeholder="0.00" oninput="convertCurrency()" class="bg-[#0b0e14] border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white w-full focus:outline-none focus:border-teal-500 font-mono">
+                    <select id="from-currency" onchange="convertCurrency()" class="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-teal-400 font-bold focus:outline-none focus:border-teal-500 cursor-pointer">
+                        <option value="usdt">USDT</option>
+                        <option value="btc">BTC</option>
+                        <option value="eth">ETH</option>
+                        <option value="sol">SOL</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Swap Button -->
+            <div class="flex justify-center">
+                <button type="button" onclick="swapCurrencies()" class="bg-gray-800 hover:bg-gray-700 text-teal-400 w-10 h-10 rounded-full flex items-center justify-center border border-gray-700 transition cursor-pointer shadow-md">
+                    <i class="fa-solid fa-arrow-down-up text-sm"></i>
+                </button>
+            </div>
+
+            <!-- To Section -->
+            <div>
+                <label class="text-xs text-gray-400 block mb-1.5 font-medium">To (Estimated)</label>
+                <div class="flex gap-2">
+                    <input type="text" id="to-amount" placeholder="0.00" readonly class="bg-[#0b0e14] border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-teal-400 w-full focus:outline-none font-mono font-bold">
+                    <select id="to-currency" onchange="convertCurrency()" class="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white font-bold focus:outline-none focus:border-teal-500 cursor-pointer">
+                        <option value="btc">BTC</option>
+                        <option value="usdt">USDT</option>
+                        <option value="eth">ETH</option>
+                        <option value="sol">SOL</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="executeConversion()" class="w-full bg-teal-500 hover:bg-teal-600 text-gray-950 font-bold py-3.5 rounded-2xl text-sm shadow-lg shadow-teal-500/20 transition cursor-pointer mt-2">
+            Convert Now
+        </button>
+    </div>
+
+</div>
+
+<script>
+let prices = { usdt: 1.0, btc: 65000.0, eth: 3500.0, sol: 150.0 };
+
+async function fetchPricesForConvert() {
+    try {
+        let res = await fetch('/api/live-prices');
+        let data = await res.json();
+        if(data.btc) prices.btc = parseFloat(data.btc.replace(/,/g, ''));
+        if(data.eth) prices.eth = parseFloat(data.eth.replace(/,/g, ''));
+        if(data.sol) prices.sol = parseFloat(data.sol.replace(/,/g, ''));
+        convertCurrency();
+    } catch(e) {
+        console.log('Error fetching live prices');
+    }
+}
+
+function convertCurrency() {
+    let amount = parseFloat(document.getElementById('from-amount').value) || 0;
+    let fromCurr = document.getElementById('from-currency').value;
+    let toCurr = document.getElementById('to-currency').value;
+
+    let amountInUsdt = amount * prices[fromCurr];
+    let result = amountInUsdt / prices[toCurr];
+
+    document.getElementById('to-amount').value = result > 0 ? result.toFixed(6) : '0.00';
+}
+
+function swapCurrencies() {
+    let fromCurr = document.getElementById('from-currency');
+    let toCurr = document.getElementById('to-currency');
+    let temp = fromCurr.value;
+    fromCurr.value = toCurr.value;
+    toCurr.value = temp;
+    convertCurrency();
+}
+
+function executeConversion() {
+    let amount = document.getElementById('from-amount').value;
+    if(!amount || amount <= 0) {
+        alert('Please enter a valid amount');
+        return;
+    }
+    alert('Conversion successful!');
+    document.getElementById('from-amount').value = '';
+    document.getElementById('to-amount').value = '0.00';
+}
+
+fetchPricesForConvert();
+</script>
+{% endblock %}

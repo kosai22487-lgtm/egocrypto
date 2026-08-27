@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egocrypto - Help Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#0b0e14] text-white min-h-screen flex flex-col items-center pb-12">
+
+    <div class="w-full max-w-lg px-4 pt-6 pb-4 flex items-center justify-between">
+        <a href="/" class="w-10 h-10 rounded-xl bg-[#12161f] border border-gray-800 flex items-center justify-center text-gray-300 hover:text-white transition">
+            <i class="fa-solid fa-bars"></i>
+        </a>
+        <div class="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xl">
+            <i class="fa-solid fa-question"></i>
+        </div>
+        <div class="w-10"></div>
+    </div>
+
+    <div class="text-center px-4 mb-6">
+        <h1 class="text-2xl font-bold tracking-tight">Help Center</h1>
+        <p class="text-sm text-gray-400 mt-1">Find answers or contact our support team</p>
+    </div>
+
+    <div class="w-full max-w-lg px-4 space-y-6">
+
+        <div class="bg-[#12161f] border border-gray-800/80 rounded-3xl p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-white font-bold text-lg">Live Support</h3>
+                <span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-1 rounded-full">Online</span>
+            </div>
+            <div id="chat-messages" class="h-64 overflow-y-auto bg-black/30 rounded-xl p-3 mb-3 space-y-2 text-left"></div>
+            <div class="flex gap-2">
+                <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-teal-500">
+                <button onclick="sendChatMessage()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold px-5 py-2.5 rounded-xl text-sm transition">Send</button>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="text-base font-bold text-white mb-3 px-1">Frequently Asked Questions</h3>
+            <div class="space-y-3">
+                <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl overflow-hidden transition">
+                    <button onclick="toggleFaq(this)" class="w-full p-4 flex items-center justify-between text-left font-medium text-sm text-white hover:text-blue-400 transition cursor-pointer">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-wallet text-blue-400"></i> How do I deposit funds?</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="hidden px-4 pb-4 text-xs text-gray-400 leading-relaxed border-t border-gray-800/50 pt-3">
+                        Go to the Wallet page and click "Deposit". Send funds to the displayed receiving address, then submit a deposit request with your transaction details. An administrator will review and approve your deposit.
+                    </div>
+                </div>
+                <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl overflow-hidden transition">
+                    <button onclick="toggleFaq(this)" class="w-full p-4 flex items-center justify-between text-left font-medium text-sm text-white hover:text-blue-400 transition cursor-pointer">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-chart-line text-blue-400"></i> How does paper trading work?</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="hidden px-4 pb-4 text-xs text-gray-400 leading-relaxed border-t border-gray-800/50 pt-3">
+                        Select an asset and duration (30s, 60s, or 120s), enter your trade amount, and predict whether the price will go UP or DOWN. If your prediction is correct at expiry, you earn 85% profit. Results are calculated from market prices.
+                    </div>
+                </div>
+                <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl overflow-hidden transition">
+                    <button onclick="toggleFaq(this)" class="w-full p-4 flex items-center justify-between text-left font-medium text-sm text-white hover:text-blue-400 transition cursor-pointer">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-wallet text-blue-400"></i> How do I withdraw funds?</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="hidden px-4 pb-4 text-xs text-gray-400 leading-relaxed border-t border-gray-800/50 pt-3">
+                        Navigate to the Wallet page and select "Withdraw". Enter the amount and your destination wallet address. Withdrawal requests are processed after administrator review.
+                    </div>
+                </div>
+                <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl overflow-hidden transition">
+                    <button onclick="toggleFaq(this)" class="w-full p-4 flex items-center justify-between text-left font-medium text-sm text-white hover:text-blue-400 transition cursor-pointer">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-shield-halved text-blue-400"></i> Is my account secure?</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="hidden px-4 pb-4 text-xs text-gray-400 leading-relaxed border-t border-gray-800/50 pt-3">
+                        Yes. We use secure authentication, session management, and your private wallet credentials are never accessible by the platform.
+                    </div>
+                </div>
+                <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl overflow-hidden transition">
+                    <button onclick="toggleFaq(this)" class="w-full p-4 flex items-center justify-between text-left font-medium text-sm text-white hover:text-blue-400 transition cursor-pointer">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-wand-magic-sparkles text-blue-400"></i> How does AI Arbitrage work?</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="hidden px-4 pb-4 text-xs text-gray-400 leading-relaxed border-t border-gray-800/50 pt-3">
+                        AI Arbitrage leverages artificial intelligence to automatically identify and exploit price differences across multiple markets. By scanning global exchanges in real time, it executes trades when profitable spreads are detected. Key benefits include:<br><br>
+                        • Fully automated operation — no manual monitoring required.<br>
+                        • Low risk — focuses on small, consistent price gaps rather than market speculation.<br>
+                        • Steady returns — designed to generate reliable profits with minimal user involvement.
+                    </div>
+                </div>
+                <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl overflow-hidden transition">
+                    <button onclick="toggleFaq(this)" class="w-full p-4 flex items-center justify-between text-left font-medium text-sm text-white hover:text-blue-400 transition cursor-pointer">
+                        <span class="flex items-center gap-3"><i class="fa-regular fa-comment text-blue-400"></i> How do I contact support?</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="hidden px-4 pb-4 text-xs text-gray-400 leading-relaxed border-t border-gray-800/50 pt-3">
+                        You can reach our support team on Telegram at customer service. We provide technical assistance, deposit/withdrawal guidance, and general support.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-[#12161f] border border-gray-800/80 rounded-3xl p-6 shadow-xl">
+            <h3 class="text-base font-bold text-white mb-4">Submit a Support Ticket</h3>
+            <form onsubmit="event.preventDefault(); alert('Support ticket submitted successfully!');" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1.5">Category</label>
+                    <select class="w-full bg-[#1a212e] border border-gray-800 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none focus:border-blue-500 transition">
+                        <option>General Inquiry</option>
+                        <option>Deposit Issue</option>
+                        <option>Withdrawal Issue</option>
+                        <option>Trading Problem</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1.5">Subject</label>
+                    <input type="text" placeholder="Brief description" class="w-full bg-[#1a212e] border border-gray-800 rounded-xl px-3.5 py-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1.5">Message</label>
+                    <textarea rows="3" placeholder="Describe your issue..." class="w-full bg-[#1a212e] border border-gray-800 rounded-xl px-3.5 py-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition resize-none"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-3.5 rounded-xl transition shadow-lg shadow-blue-600/25 cursor-pointer">
+                    Submit Ticket
+                </button>
+            </form>
+        </div>
+
+        <div class="text-center pt-2 pb-4">
+            <p class="text-xs text-gray-500">Telegram Support: <a href="https://t.me/egocryptosupport" target="_blank" class="text-blue-400 hover:underline">customer service</a></p>
+        </div>
+    </div>
+
+    <script>
+    function toggleFaq(button) {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('.fa-chevron-down');
+        content.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
+
+    function loadChatMessages() {
+        fetch('/api/chat/messages')
+            .then(r => r.json())
+            .then(messages => {
+                const container = document.getElementById('chat-messages');
+                const currentCount = container.querySelectorAll('[data-msg-id]').length;
+                if (currentCount === messages.length && messages.length > 0) {
+                    return;
+                }
+                container.innerHTML = '';
+                if (messages.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:20px 10px;"><i class="fa-solid fa-comments" style="font-size:24px;color:#2dd4bf;"></i><h4 style="color:white;font-weight:bold;font-size:16px;margin:8px 0 4px;">Welcome to Egocrypto Support</h4><p style="color:#9ca3af;font-size:14px;">Egocrypto is a next-generation trading platform designed to deliver clarity, speed, and confidence to users of all experience levels.</p></div>';
+                    return;
+                }
+                messages.forEach(msg => {
+                    const isAdmin = msg.is_admin;
+                    const row = document.createElement('div');
+                    row.style.display = 'flex';
+                    row.style.justifyContent = isAdmin ? 'flex-start' : 'flex-end';
+                    row.style.width = '100%';
+                    row.style.marginBottom = '8px';
+                    const bubble = document.createElement('div');
+                    bubble.style.maxWidth = '80%';
+                    bubble.style.padding = '8px 12px';
+                    bubble.style.borderRadius = '12px';
+                    bubble.style.background = isAdmin ? '#374151' : '#0d9488';
+                    bubble.style.color = 'white';
+                    bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.2)';
+                    bubble.style.wordBreak = 'break-word';
+                    const sender = document.createElement('div');
+                    sender.style.fontSize = '11px';
+                    sender.style.fontWeight = 'bold';
+                    sender.style.marginBottom = '4px';
+                    sender.style.color = isAdmin ? '#93c5fd' : '#ccfbf1';
+                    sender.innerText = msg.sender;
+                    const message = document.createElement('div');
+                    message.style.fontSize = '14px';
+                    message.innerText = msg.message;
+                    const time = document.createElement('div');
+                    time.style.fontSize = '10px';
+                    time.style.opacity = '0.7';
+                    time.style.marginTop = '4px';
+                    time.innerText = msg.created_at;
+                    bubble.appendChild(sender);
+                    bubble.appendChild(message);
+                    bubble.appendChild(time);
+                    row.appendChild(bubble);
+                    container.appendChild(row);
+                });
+                container.scrollTop = container.scrollHeight;
+            });
+    }
+
+    function sendChatMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        if (!message) return;
+        fetch('/api/chat/send', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: message })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                input.value = '';
+                loadChatMessages();
+            }
+        });
+    }
+
+    loadChatMessages();
+    setInterval(loadChatMessages, 3000);
+    </script>
+</body>
+</html>

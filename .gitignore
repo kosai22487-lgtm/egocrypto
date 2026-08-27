@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+*.zip
+*.tgz
+part_*
+fix_*.py
+restore_*.py
+clean_*.py
+project_to_pdf.p
+app_rest*
+data/
+instance/
+*.htm

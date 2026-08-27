@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-4 pb-20 text-gray-100">
+
+    <!-- Select Crypto Pair -->
+    <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl p-3 shadow-xl relative">
+        <label class="text-xs text-gray-400 block mb-1.5 font-medium">Select Crypto Pair</label>
+        <div onclick="toggleCoinDropdown()" class="w-full bg-[#0b0e14] border border-gray-700 hover:border-teal-500 rounded-xl px-3 py-2.5 text-sm text-white font-bold flex items-center justify-between cursor-pointer transition">
+            <div class="flex items-center space-x-2">
+                <span id="selected-coin-symbol" class="text-teal-400">BTC/USDT</span>
+                <span id="selected-coin-name" class="text-xs text-gray-400 font-normal">Bitcoin</span>
+            </div>
+            <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+        </div>
+
+        <!-- Coin Dropdown List -->
+        <div id="coinDropdownList" class="hidden absolute left-3 right-3 top-20 bg-[#12161f] border border-gray-700 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto p-1.5 space-y-1">
+            <div onclick="selectCoin('bitcoin', 'BTCUSDT', 'BTC/USDT', 'Bitcoin')" class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-800/80 rounded-xl cursor-pointer">
+                <span class="text-white text-sm font-bold">BTC/USDT</span>
+                <span class="text-xs text-gray-400">Bitcoin</span>
+            </div>
+            <div onclick="selectCoin('ethereum', 'ETHUSDT', 'ETH/USDT', 'Ethereum')" class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-800/80 rounded-xl cursor-pointer">
+                <span class="text-white text-sm font-bold">ETH/USDT</span>
+                <span class="text-xs text-gray-400">Ethereum</span>
+            </div>
+            <div onclick="selectCoin('solana', 'SOLUSDT', 'SOL/USDT', 'Solana')" class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-800/80 rounded-xl cursor-pointer">
+                <span class="text-white text-sm font-bold">SOL/USDT</span>
+                <span class="text-xs text-gray-400">Solana</span>
+            </div>
+            <div onclick="selectCoin('binancecoin', 'BNBUSDT', 'BNB/USDT', 'Binance Coin')" class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-800/80 rounded-xl cursor-pointer">
+                <span class="text-white text-sm font-bold">BNB/USDT</span>
+                <span class="text-xs text-gray-400">BNB</span>
+            </div>
+            <div onclick="selectCoin('ripple', 'XRPUSDT', 'XRP/USDT', 'Ripple')" class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-800/80 rounded-xl cursor-pointer">
+                <span class="text-white text-sm font-bold">XRP/USDT</span>
+                <span class="text-xs text-gray-400">Ripple</span>
+            </div>
+            <div onclick="selectCoin('dogecoin', 'DOGEUSDT', 'DOGE/USDT', 'Dogecoin')" class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-800/80 rounded-xl cursor-pointer">
+                <span class="text-white text-sm font-bold">DOGE/USDT</span>
+                <span class="text-xs text-gray-400">Dogecoin</span>
+            </div>
+            <div onclick="selectCoin('cardano', 'ADAUSDT', 'ADA/USDT', 'Cardano')" class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-800/80 rounded-xl cursor-pointer">
+                <span class="text-white text-sm font-bold">ADA/USDT</span>
+                <span class="text-xs text-gray-400">Cardano</span>
+            </div>
+            <div onclick="selectCoin('avalanche-2', 'AVAXUSDT', 'AVAX/USDT', 'Avalanche')" class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-800/80 rounded-xl cursor-pointer">
+                <span class="text-white text-sm font-bold">AVAX/USDT</span>
+                <span class="text-xs text-gray-400">Avalanche</span>
+            </div>
+            <div onclick="selectCoin('chainlink', 'LINKUSDT', 'LINK/USDT', 'Chainlink')" class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-800/80 rounded-xl cursor-pointer">
+                <span class="text-white text-sm font-bold">LINK/USDT</span>
+                <span class="text-xs text-gray-400">Chainlink</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Price Banner -->
+    <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl p-4 shadow-xl flex items-center justify-between">
+        <div>
+            <div id="coinTitle" class="text-xs text-gray-400 font-medium">BTC/USDT Price</div>
+            <div id="livePrice" class="text-2xl font-black text-white font-mono mt-0.5">Loading...</div>
+        </div>
+        <div id="priceChange" class="text-xs font-semibold px-2.5 py-1 rounded-lg">--%</div>
+    </div>
+
+    <!-- Live Candlestick Chart -->
+    <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl p-3 shadow-xl">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-gray-400 font-medium">Live Candlestick Chart</span>
+            <span class="text-[10px] bg-teal-500/10 text-teal-400 px-2 py-0.5 rounded-full font-mono">1H INTERVAL</span>
+        </div>
+        <div id="chartContainer" class="w-full h-[320px] rounded-xl overflow-hidden bg-[#0b0e14]"></div>
+    </div>
+
+    <!-- Delivery Period & Return Rate -->
+    <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl p-4 shadow-xl space-y-3.5">
+        <div class="flex justify-between items-center">
+            <label class="text-xs text-gray-400 font-medium flex items-center gap-1.5">
+                <i class="fa-solid fa-clock-rotate-left text-teal-400"></i> Delivery Period & Return Rate
+            </label>
+            <span class="text-[10px] bg-teal-500/10 text-teal-400 border border-teal-500/20 px-2 py-0.5 rounded-md font-mono font-semibold" id="selected-spec-badge">30s • 40% ROI</span>
+        </div>
+
+        <!-- Duration Selection Buttons -->
+        <div class="grid grid-cols-5 gap-2" id="pairedSelector">
+            <button type="button" onclick="selectPair(30, 40, this)" class="pair-btn bg-teal-500 text-gray-950 font-bold p-2.5 rounded-xl text-xs flex flex-col items-center justify-center shadow-md shadow-teal-500/10 transition cursor-pointer">
+                <span class="text-sm font-black">30s</span>
+                <span class="text-[10px] font-semibold opacity-90 mt-0.5">40% ROI</span>
+            </button>
+            <button type="button" onclick="selectPair(60, 50, this)" class="pair-btn bg-[#0b0e14] border border-gray-700/80 text-gray-300 hover:border-teal-500/60 font-bold p-2.5 rounded-xl text-xs flex flex-col items-center justify-center transition cursor-pointer">
+                <span class="text-sm font-black text-white">60s</span>
+                <span class="text-[10px] text-teal-400 font-semibold mt-0.5">50% ROI</span>
+            </button>
+            <button type="button" onclick="selectPair(90, 70, this)" class="pair-btn bg-[#0b0e14] border border-gray-700/80 text-gray-300 hover:border-teal-500/60 font-bold p-2.5 rounded-xl text-xs flex flex-col items-center justify-center transition cursor-pointer">
+                <span class="text-sm font-black text-white">90s</span>
+                <span class="text-[10px] text-teal-400 font-semibold mt-0.5">70% ROI</span>
+            </button>
+            <button type="button" onclick="selectPair(120, 80, this)" class="pair-btn bg-[#0b0e14] border border-gray-700/80 text-gray-300 hover:border-teal-500/60 font-bold p-2.5 rounded-xl text-xs flex flex-col items-center justify-center transition cursor-pointer">
+                <span class="text-sm font-black text-white">120s</span>
+                <span class="text-[10px] text-teal-400 font-semibold mt-0.5">80% ROI</span>
+            </button>
+            <button type="button" onclick="selectPair(150, 100, this)" class="pair-btn bg-[#0b0e14] border border-gray-700/80 text-gray-300 hover:border-teal-500/60 font-bold p-2.5 rounded-xl text-xs flex flex-col items-center justify-center transition cursor-pointer">
+                <span class="text-sm font-black text-white">150s</span>
+                <span class="text-[10px] text-teal-400 font-semibold mt-0.5">100% ROI</span>
+            </button>
+        </div>
+
+        <div class="pt-1">
+            <div class="flex justify-between items-center mb-1.5">
+                <label class="text-xs text-gray-400 font-medium">Investment</label>
+                <span id="balance-display" class="text-xs text-gray-400 font-mono">Balance: $0.00</span>
+            </div>
+            <div class="flex gap-2">
+                <input type="number" id="trade-usdt-amount" placeholder="0.00" oninput="updateCryptoAmount()" class="bg-[#0b0e14] border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white w-full focus:outline-none focus:border-teal-500 font-mono">
+                <div class="bg-gray-800/80 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-teal-400 font-bold flex items-center justify-center min-w-[75px]">
+                    USDT
+                </div>
+            </div>
+        </div>
+
+        <!-- Estimated Asset Display -->
+        <div class="bg-[#0b0e14] border border-gray-800 rounded-xl px-3.5 py-2.5 text-xs text-gray-400 font-mono flex justify-between items-center">
+            <span>Estimated Asset:</span>
+            <div>
+                <span id="crypto-amount-display" class="text-teal-400 font-bold">0.00</span>
+                <span id="crypto-symbol-display" class="text-teal-400">BTC</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons (Buy / Sell) -->
+        <div class="grid grid-cols-2 gap-3 pt-2">
+            <button onclick="executeTrade('buy')" class="bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-bold py-3.5 rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20 transition cursor-pointer">
+                <i class="fa-solid fa-arrow-trend-up text-base"></i>
+                <span class="text-base">Buy / Long</span>
+            </button>
+            <button onclick="executeTrade('sell')" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-rose-500/20 transition cursor-pointer">
+                <i class="fa-solid fa-arrow-trend-down text-base"></i>
+                <span class="text-base">Sell / Short</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Trade Status Modal -->
+    <div id="tradeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#12161f] border border-gray-800/90 w-full max-w-sm rounded-[28px] p-6 shadow-2xl space-y-5 relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white bg-gray-800/40 hover:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+            <div id="modalIconContainer" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg mt-1">
+                <i id="modalIcon" class="fa-solid fa-check text-2xl"></i>
+            </div>
+            <div class="text-center space-y-1">
+                <h3 id="modalTitle" class="text-lg font-bold text-white">Order Executed Successfully</h3>
+                <p id="modalSubtitle" class="text-xs text-gray-400">Your position has been successfully opened.</p>
+            </div>
+            <div class="bg-[#0b0e14] border border-gray-800/80 rounded-2xl p-4 space-y-2.5 text-xs font-mono">
+                <div class="flex justify-between"><span class="text-gray-400">Order Type</span><span id="resType" class="font-bold uppercase text-white">-</span></div>
+                <div class="flex justify-between border-t border-gray-800/60 pt-2"><span class="text-gray-400">Trading Pair</span><span id="resSymbol" class="font-bold text-teal-400">-</span></div>
+                <div class="flex justify-between border-t border-gray-800/60 pt-2"><span class="text-gray-400">Entry Price</span><span id="resPrice" class="font-bold text-white">-</span></div>
+                <div class="flex justify-between border-t border-gray-800/60 pt-2"><span class="text-gray-400">Duration</span><span id="resDuration" class="font-bold text-white">-</span></div>
+                <div class="flex justify-between border-t border-gray-800/60 pt-2"><span class="text-gray-400">Return Rate (ROI)</span><span id="resRoi" class="font-bold text-teal-400">-</span></div>
+                <div class="flex justify-between border-t border-gray-800/60 pt-2"><span class="text-gray-400">Expected P&L</span><span id="resPnl" class="font-bold text-emerald-400">-</span></div>
+            </div>
+            <button onclick="closeModal()" class="w-full bg-teal-500 hover:bg-teal-600 text-gray-950 font-bold py-3.5 rounded-xl text-sm shadow-lg cursor-pointer">Continue Trading</button>
+        </div>
+    </div>
+
+    <!-- Lightweight Charts CDN -->
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+    <script>
+        let chart, candleSeries;
+        let currentCoinId = 'bitcoin';
+        let currentSymbol = 'BTCUSDT';
+        let currentPrice = 0;
+        let userBalance = 0;
+        let selectedDuration = 30;
+        let selectedProfitPercent = 40;
+        let activeTradeId = null;
+        let countdownInterval = null;
+
+        function selectPair(seconds, profit, btn) {
+            selectedDuration = seconds;
+            selectedProfitPercent = profit;
+            document.getElementById('selected-spec-badge').innerText = `${seconds}s • ${profit}% ROI`;
+            document.querySelectorAll('.pair-btn').forEach(b => {
+                b.className = "pair-btn bg-[#0b0e14] border border-gray-700/80 text-gray-300 hover:border-teal-500/60 font-bold p-2.5 rounded-xl text-xs flex flex-col items-center justify-center transition cursor-pointer";
+                const topSpan = b.querySelector('span:nth-child(1)');
+                const subSpan = b.querySelector('span:nth-child(2)');
+                if(topSpan) topSpan.className = "text-sm font-black text-white";
+                if(subSpan) subSpan.className = "text-[10px] text-teal-400 font-semibold mt-0.5";
+            });
+            btn.className = "pair-btn bg-teal-500 text-gray-950 font-bold p-2.5 rounded-xl text-xs flex flex-col items-center justify-center shadow-md shadow-teal-500/15 transition cursor-pointer";
+            const activeTop = btn.querySelector('span:nth-child(1)');
+            const activeSub = btn.querySelector('span:nth-child(2)');
+            if(activeTop) activeTop.className = "text-sm font-black";
+            if(activeSub) activeSub.className = "text-[10px] font-semibold opacity-90 mt-0.5";
+        }
+
+        async function fetchBalance() {
+            try {
+                const resp = await fetch('/api/data');
+                const data = await resp.json();
+                userBalance = data.balance;
+                document.getElementById('balance-display').innerText = 'Balance: $' + userBalance.toFixed(2);
+            } catch (err) { console.error(err); }
+        }
+
+        function initChart() {
+            document.getElementById('chartContainer').innerHTML = '';
+            chart = LightweightCharts.createChart(document.getElementById('chartContainer'), {
+                width: document.getElementById('chartContainer').clientWidth,
+                height: 320,
+                layout: { background: { type: 'solid', color: '#0b0e14' }, textColor: '#9ca3af' },
+                grid: { vertLines: { color: '#1f2937' }, horzLines: { color: '#1f2937' } },
+                timeScale: { borderColor: '#374151', timeVisible: true },
+            });
+            candleSeries = chart.addCandlestickSeries({
+                upColor: '#10b981', downColor: '#f43f5e', borderVisible: false,
+                wickColor: '#10b981', wickDownColor: '#f43f5e',
+            });
+        }
+
+        async function loadChartData() {
+            try {
+                const resp = await fetch(`/api/trading-data/${currentCoinId}`);
+                const result = await resp.json();
+                if (result.success && result.ohlc && result.ohlc.length > 2) {
+                    const formattedData = result.ohlc.map(c => ({
+                        time: Math.floor(c[0] / 1000), open: c[1], high: c[2], low: c[3], close: c[4]
+                    }));
+                    candleSeries.setData(formattedData);
+                    if (result.current_price > 0) {
+                        currentPrice = result.current_price;
+                        document.getElementById('livePrice').innerText = "$" + currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const change = ((currentPrice - formattedData[0].open) / formattedData[0].open) * 100;
+                        const ce = document.getElementById('priceChange');
+                        ce.innerText = (change >= 0 ? "+" : "") + change.toFixed(2) + "%";
+                        ce.className = change >= 0 ? "text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400" : "text-xs font-semibold px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400";
+                        updateCryptoAmount();
+                    }
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function updateCryptoAmount() {
+            const usdtAmount = parseFloat(document.getElementById('trade-usdt-amount').value) || 0;
+            if (currentPrice > 0) {
+                const cryptoAmount = usdtAmount / currentPrice;
+                document.getElementById('crypto-amount-display').innerText = cryptoAmount.toFixed(6);
+                document.getElementById('crypto-symbol-display').innerText = currentSymbol.replace('USDT', '');
+            }
+        }
+
+        async function executeTrade(type) {
+            const usdtAmount = parseFloat(document.getElementById('trade-usdt-amount').value);
+            if (!usdtAmount || usdtAmount <= 0) { alert('Please enter a valid USDT amount.'); return; }
+            if (currentPrice <= 0) { alert('Price not available. Please wait.'); return; }
+
+            const cryptoAmount = usdtAmount / currentPrice;
+            try {
+                const resp = await fetch('/api/trade', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type, symbol: currentSymbol, amount: cryptoAmount, price: currentPrice, duration: selectedDuration, profit_percent: selectedProfitPercent })
+                });
+                const result = await resp.json();
+                if (result.success) {
+                    activeTradeId = result.trade_id;
+                    showCountdownModal(type, (usdtAmount * selectedProfitPercent) / 100);
+                    document.getElementById('trade-usdt-amount').value = '';
+                    document.getElementById('crypto-amount-display').innerText = '0.00';
+                    fetchBalance();
+                } else { alert('Error: ' + result.message); }
+            } catch (err) { console.error(err); alert('Trade failed.'); }
+        }
+
+        function showCountdownModal(type, expectedProfit) {
+            let timeLeft = selectedDuration;
+            const modal = document.getElementById('tradeModal');
+            modal.classList.remove('hidden');
+            document.getElementById('modalTitle').innerText = "Trade in Progress...";
+            document.getElementById('modalSubtitle').innerText = `Waiting for position to close (${timeLeft}s remaining)`;
+            document.getElementById('resType').innerText = type.toUpperCase() + (type === 'buy' ? ' / LONG' : ' / SHORT');
+            document.getElementById('resSymbol').innerText = currentSymbol;
+            document.getElementById('resPrice').innerText = '$' + currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('resDuration').innerHTML = `<span id="timerCount" class="text-teal-400 font-bold">${timeLeft}</span> Seconds`;
+            document.getElementById('resRoi').innerText = selectedProfitPercent + '%';
+            document.getElementById('resPnl').innerText = '+' + expectedProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
+            
+            const iconContainer = document.getElementById('modalIconContainer');
+            const modalIcon = document.getElementById('modalIcon');
+            iconContainer.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg bg-teal-500/20 text-teal-400 border border-teal-500/30 mt-1";
+            modalIcon.className = "fa-solid fa-spinner fa-spin text-2xl text-teal-400";
+
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                const timerElem = document.getElementById('timerCount');
+                if (timerElem) timerElem.innerText = timeLeft;
+                document.getElementById('modalSubtitle').innerText = `Waiting for position to close (${timeLeft}s remaining)`;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    resolveTrade(activeTradeId);
+                }
+            }, 1000);
+        }
+
+        async function resolveTrade(tradeId) {
+            try {
+                const resp = await fetch(`/api/resolve-trade/${tradeId}`, { method: 'POST' });
+                const res = await resp.json();
+                const iconContainer = document.getElementById('modalIconContainer');
+                const modalIcon = document.getElementById('modalIcon');
+                if (res.success) {
+                    document.getElementById('modalTitle').innerText = "Trade Closed Successfully";
+                                    if (res.result === 'win') {
+                    document.getElementById('modalTitle').innerText = "Congratulations 🎉 You Win!";
+                    document.getElementById('modalSubtitle').innerText = "Your position won!";
+                    iconContainer.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 mt-1";
+                    modalIcon.className = "fa-solid fa-trophy text-3xl text-yellow-400";
+                    document.getElementById('resPnl').innerHTML = `<span class="text-emerald-400 font-bold">+${res.profit_amount.toFixed(2)} USDT (WIN)</span>`;
+                } USDT (WIN)</span>`;
+                    } else {
+                        document.getElementById('modalSubtitle').innerText = "Position closed in loss.";
+                        iconContainer.className = "w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg bg-rose-500/20 text-rose-400 border border-rose-500/30 mt-1";
+                        modalIcon.className = "fa-solid fa-triangle-exclamation text-2xl text-rose-400";
+                        document.getElementById('resPnl').innerHTML = `<span class="text-rose-400 font-bold">-${res.profit_amount.toFixed(2)} USDT (LOSS)</span>`;
+                    }
+                    fetchBalance();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function closeModal() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            document.getElementById('tradeModal').classList.add('hidden');
+        }
+
+        function toggleCoinDropdown() {
+            document.getElementById('coinDropdownList').classList.toggle('hidden');
+        }
+
+        function selectCoin(coinId, symbol, displaySymbol, displayName) {
+            currentCoinId = coinId;
+            currentSymbol = symbol;
+            document.getElementById('selected-coin-symbol').innerText = displaySymbol;
+            document.getElementById('selected-coin-name').innerText = displayName;
+            document.getElementById('coinTitle').innerText = displaySymbol + " Price";
+            document.getElementById('crypto-symbol-display').innerText = displaySymbol.split('/')[0];
+            document.getElementById('coinDropdownList').classList.add('hidden');
+            document.getElementById('livePrice').innerText = "Loading...";
+            document.getElementById('priceChange').innerText = "--%";
+            document.getElementById('trade-usdt-amount').value = '';
+            document.getElementById('crypto-amount-display').innerText = '0.00';
+            loadChartData();
+        }
+
+        window.onclick = function(e) {
+            if (!e.target.closest('#coinDropdownList') && !e.target.closest('div[onclick="toggleCoinDropdown()"]')) {
+                document.getElementById('coinDropdownList').classList.add('hidden');
+            }
+        }
+
+        fetchBalance();
+        initChart();
+        loadChartData();
+        setInterval(loadChartData, 60000);
+
+        // Handle coin selection from Markets page via URL params
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const coinId = params.get('coin');
+            if (coinId) {
+                const symbol = params.get('symbol') || 'BTCUSDT';
+                const name = params.get('name') || 'Bitcoin';
+                currentCoinId = coinId;
+                currentSymbol = symbol;
+                document.getElementById('selected-coin-symbol').innerText = symbol;
+                document.getElementById('selected-coin-name').innerText = name;
+                document.getElementById('coinTitle').innerText = symbol + " Price";
+                document.getElementById('crypto-symbol-display').innerText = symbol.replace('USDT', '');
+                document.getElementById('livePrice').innerText = "Loading...";
+                document.getElementById('priceChange').innerText = "--%";
+                loadChartData();
+            }
+        })();
+    </script>
+</div>
+{% endblock %}

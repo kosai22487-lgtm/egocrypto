@@ -1,0 +1,108 @@
+
+// ===== Particle Background =====
+(function(){
+    const canvas = document.createElement('canvas');
+    canvas.id = 'particle-canvas';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    let width, height, particles = [];
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.size = Math.random() * 1.5 + 0.5;
+            this.speedY = Math.random() * 0.5 + 0.1;
+            this.speedX = Math.random() * 0.2 - 0.1;
+            this.opacity = Math.random() * 0.5 + 0.2;
+        }
+        update() {
+            this.y -= this.speedY;
+            this.x += this.speedX;
+            if (this.y < -10 || this.x < -10 || this.x > width + 10) this.reset();
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+})();
+
+// ===== Count-up Animation =====
+function animateCountUp(element) {
+    const target = parseFloat(element.dataset.count || element.innerText.replace(/[^0-9.-]/g, ''));
+    if (isNaN(target)) return;
+    const duration = 1500;
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const currentValue = target * progress;
+        element.innerText = (target >= 1000 ? '$' : '') + currentValue.toFixed(target >= 1000 ? 2 : 0);
+        if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+}
+
+// Auto-detect elements with class "count-up" and data-count
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.count-up').forEach(el => {
+        if (el.dataset.count) animateCountUp(el);
+    });
+    // Also animate elements with IDs known to hold balances
+    const ids = ['balance-val', 'wallet-total-balance', 'btc-main-price', 'eth-grid-price', 'btc-grid-price'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.classList.contains('count-up')) {
+            el.classList.add('count-up');
+            animateCountUp(el);
+        }
+    });
+});
+
+// ===== Add floating blobs =====
+document.addEventListener('DOMContentLoaded', () => {
+    if (!document.querySelector('.background-blob')) {
+        const blobDiv = document.createElement('div');
+        blobDiv.innerHTML = `<div class="background-blob blob-1"></div><div class="background-blob blob-2"></div><div class="background-blob blob-3"></div>`;
+        document.body.appendChild(blobDiv);
+    }
+});
+
+// ===== Smooth view switching (fade) for index.html =====
+if (typeof switchTab === 'function') {
+    const originalSwitch = switchTab;
+    window.switchTab = function(tab) {
+        const main = document.querySelector('main');
+        if (main) {
+            main.style.transition = 'opacity 0.3s';
+            main.style.opacity = '0';
+            setTimeout(() => {
+                originalSwitch(tab);
+                main.style.opacity = '1';
+            }, 300);
+        } else {
+            originalSwitch(tab);
+        }
+    };
+}

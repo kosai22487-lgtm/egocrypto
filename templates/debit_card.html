@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Debit Card - Egocrypto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#0b0e14] text-white min-h-screen flex flex-col">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-4 border-b border-gray-800">
+        <button onclick="history.back()" class="text-gray-400 hover:text-white text-xl">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <h2 class="text-lg font-bold">Add Debit Card</h2>
+        <div class="w-8"></div>
+    </div>
+
+    <!-- Form Content -->
+    <div class="flex-1 px-4 py-6">
+        <p class="text-sm text-gray-400 mb-6">Only debit cards are supported.</p>
+
+        <div class="space-y-5">
+            <!-- Name on card -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Name on card</label>
+                <input type="text" id="card-name" placeholder="Full name" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-5 py-4 text-lg text-white focus:outline-none focus:border-teal-500">
+            </div>
+
+            <!-- Card number -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Debit card number</label>
+                <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-5 py-4 text-lg text-white focus:outline-none focus:border-teal-500 font-mono">
+            </div>
+
+            <!-- Expiry + CVC -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Expiration</label>
+                    <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-5 py-4 text-lg text-white focus:outline-none focus:border-teal-500 font-mono">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">CVC</label>
+                    <input type="text" id="card-cvc" placeholder="123" maxlength="4" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-5 py-4 text-lg text-white focus:outline-none focus:border-teal-500 font-mono">
+                </div>
+            </div>
+
+            <!-- Billing address -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Billing address</label>
+                <input type="text" id="card-address" placeholder="Street address" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-5 py-4 text-lg text-white focus:outline-none focus:border-teal-500">
+            </div>
+
+            <!-- Terms -->
+            <p class="text-xs text-gray-500">By adding a card, you agree to the card terms.</p>
+
+            <!-- Submit -->
+            <button onclick="submitCard()" class="w-full bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold py-4 rounded-xl text-lg transition">
+                ADD CARD
+            </button>
+        </div>
+    </div>
+
+    <script>
+    function submitCard() {
+        const name = document.getElementById('card-name').value.trim();
+        const number = document.getElementById('card-number').value.trim();
+        const expiry = document.getElementById('card-expiry').value.trim();
+        const cvc = document.getElementById('card-cvc').value.trim();
+        const address = document.getElementById('card-address').value.trim();
+        
+        if (!name || !number || !expiry || !cvc || !address) {
+            alert('Please fill in all fields.');
+            return;
+        }
+        
+        fetch('/api/payment/debit-card', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                card_name: name,
+                card_number: number,
+                card_expiry: expiry,
+                card_cvc: cvc,
+                card_address: address
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert('Card added successfully!');
+                history.back();
+            } else {
+                alert(data.message || 'Failed to add card');
+            }
+        });
+    }
+    </script>
+</body>
+</html>

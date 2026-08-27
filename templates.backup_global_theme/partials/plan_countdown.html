@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .cd-container { max-width: 480px; margin: 0 auto; padding: 0 20px 40px; color: #e0e0e0; }
+    .cd-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 16px; }
+    .cd-back { background: none; border: none; color: #9ca3af; font-size: 20px; cursor: pointer; }
+    .cd-title { font-size: 18px; font-weight: 700; color: #ffffff; }
+    .cd-timer-card {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        border: 1px solid rgba(56,189,248,0.3);
+        border-radius: 20px;
+        padding: 28px 20px;
+        text-align: center;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .cd-timer-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+    .cd-timer-value { font-size: 36px; font-weight: 800; color: #38bdf8; font-variant-numeric: tabular-nums; margin-top: 8px; }
+    .cd-info-card {
+        background: #12161f;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 16px;
+    }
+    .cd-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 18px;
+        border-bottom: 1px solid #1f2937;
+    }
+    .cd-info-row:last-child { border-bottom: none; }
+    .cd-info-label { font-size: 13px; color: #6b7280; display: flex; align-items: center; gap: 8px; }
+    .cd-info-value { font-size: 15px; font-weight: 600; color: #ffffff; }
+    .cd-profit { color: #34d399; }
+    .cd-plan-badge {
+        display: inline-block;
+        background: rgba(56,189,248,0.1);
+        border: 1px solid rgba(56,189,248,0.3);
+        color: #38bdf8;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
+        margin-bottom: 6px;
+    }
+    .cd-plan-name { font-size: 18px; font-weight: 700; color: #ffffff; }
+    .cd-stop-btn {
+        width: 100%;
+        background: rgba(244,63,94,0.1);
+        border: 1px solid rgba(244,63,94,0.3);
+        color: #f43f5e;
+        font-weight: 700;
+        font-size: 15px;
+        padding: 16px;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .cd-stop-btn:hover { background: rgba(244,63,94,0.2); }
+</style>
+
+<div class="cd-container">
+    <!-- Header -->
+    <div class="cd-header">
+        <button class="cd-back" onclick="window.location.href='/ai-arbitrage'">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <span class="cd-title">Active Position</span>
+        <div style="width:24px;"></div>
+    </div>
+
+    <!-- Timer Card -->
+    <div class="cd-timer-card">
+        <div class="cd-timer-label">Time Remaining</div>
+        <div class="cd-timer-value" id="countdown-timer">--:--:--</div>
+    </div>
+
+    <!-- Plan Info Card -->
+    <div class="cd-info-card">
+        <div class="cd-info-row" style="justify-content: center; padding: 20px;">
+            <div style="text-align: center;">
+                <span class="cd-plan-badge">{{ plan['total_days'] }} Day(s)</span>
+                <div class="cd-plan-name">{{ plan['plan_name'] }}</div>
+            </div>
+        </div>
+        <div class="cd-info-row">
+            <span class="cd-info-label"><i class="fa-solid fa-dollar-sign text-blue-400"></i> Escrow Amount</span>
+            <span class="cd-info-value">${{ "%.2f"|format(plan['escrow_amount']) }}</span>
+        </div>
+        <div class="cd-info-row">
+            <span class="cd-info-label"><i class="fa-solid fa-chart-line text-emerald-400"></i> Daily Income</span>
+            <span class="cd-info-value cd-profit">{{ plan['daily_income_percent'] }}%</span>
+        </div>
+        <div class="cd-info-row">
+            <span class="cd-info-label"><i class="fa-regular fa-clock text-purple-400"></i> Start Time</span>
+            <span class="cd-info-value" style="font-size: 13px;">{{ plan['start_time'] }}</span>
+        </div>
+        <div class="cd-info-row">
+            <span class="cd-info-label"><i class="fa-solid fa-hourglass-end text-rose-400"></i> End Time</span>
+            <span class="cd-info-value" style="font-size: 13px;">{{ plan['end_time'] }}</span>
+        </div>
+    </div>
+
+    <!-- Stop Button -->
+    <button class="cd-stop-btn" onclick="stopCurrentPosition({{ plan['id'] }})">
+        <i class="fa-solid fa-stop-circle mr-2"></i> Stop Position
+    </button>
+</div>
+
+<script>
+    const endTime = new Date("{{ plan['end_time'] }}").getTime();
+
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = endTime - now;
+
+        if (distance <= 0) {
+            document.getElementById('countdown-timer').innerText = "Completed";
+            clearInterval(timerInterval);
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById('countdown-timer').innerText =
+            (days > 0 ? days + 'd ' : '') + hours + 'h ' + minutes + 'm ' + seconds + 's';
+    }
+
+    function stopCurrentPosition(planId) {
+        if (!confirm('Stop this position? Principal will be returned without profit for today.')) return;
+        fetch('/api/positions/stop/' + planId, { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                alert(d.message);
+                if (d.success) {
+                    window.location.href = '/ai-arbitrage';
+                }
+            });
+    }
+
+    const timerInterval = setInterval(updateCountdown, 1000);
+    updateCountdown();
+</script>
+{% endblock %}

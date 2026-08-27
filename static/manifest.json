@@ -1,0 +1,15 @@
+{
+  "name": "Egocrypto",
+  "short_name": "Egocrypto",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0e14",
+  "theme_color": "#0b0e14",
+  "icons": [
+    {
+      "src": "/static/ai_robot.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    }
+  ]
+}

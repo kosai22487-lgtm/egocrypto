@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egocrypto - Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0B0E14; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .ai-badge { border: 1.5px solid #FACC15; border-radius: 30px; padding: 8px 18px; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #ffffff; display: inline-block; }
+        .hero-title { font-size: 44px; font-weight: bold; line-height: 1.1; }
+        .btn-primary { background: linear-gradient(135deg, #4F46E5, #06B6D4); border-radius: 30px; color: #ffffff; font-weight: bold; font-size: 16px; transition: transform 0.15s; }
+        .btn-outline-yellow { border: 1.5px solid #FACC15; border-radius: 30px; color: #FACC15; font-weight: bold; font-size: 16px; background: rgba(0,0,0,0.1); transition: transform 0.15s; }
+        .grid-item { background: rgba(22,32,50,0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px 12px; text-align: center; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: #ffffff; }
+        .feature-card { background: #1B212C; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; }
+        .feature-title { color: #FACC15; font-size: 14px; font-weight: bold; letter-spacing: 0.8px; text-transform: uppercase; }
+        .feature-desc { color: #94A3B8; font-size: 14px; line-height: 1.6; margin-top: 12px; }
+
+        /* ===== LOGIN STYLES (WHITE INPUTS) ===== */
+        .auth-container { background-color: #1C212E; border-radius: 24px; padding: 32px 24px; max-width: 420px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .auth-title { font-size: 28px; font-weight: 600; color: #ffffff; margin-bottom: 4px; }
+        .auth-subtitle { color: #9CA3AF; font-size: 14px; margin-bottom: 24px; }
+        .auth-label { color: #A3A8B8; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 6px; margin-top: 14px; }
+        .auth-input { background-color: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 12px; padding: 14px 16px; color: #111827; width: 100%; font-size: 15px; transition: 0.2s; outline: none; }
+        .auth-input:focus { border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        .auth-input::placeholder { color: #9CA3AF; }
+        .auth-btn-gradient { background: linear-gradient(135deg, #2563EB, #3B82F6); border-radius: 12px; color: #ffffff; font-weight: 600; font-size: 16px; padding: 14px; width: 100%; text-align: center; border: none; cursor: pointer; transition: 0.2s; }
+        .auth-btn-gradient:hover { opacity: 0.9; }
+        .show-password-btn-login { background-color: #E5E7EB; border-radius: 6px; color: #4B5563; font-size: 13px; font-weight: 500; padding: 4px 12px; border: none; cursor: pointer; transition: 0.2s; }
+        .show-password-btn-login:hover { background-color: #D1D5DB; }
+        .forgot-password { color: #FACC15; font-size: 13px; font-weight: 500; text-decoration: none; }
+        .forgot-password:hover { text-decoration: underline; }
+
+        /* ===== REGISTER STYLES (DARK THEME) ===== */
+        .reg-container { background-color: #141824; border-radius: 24px; padding: 24px 20px; max-width: 420px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .reg-title { font-size: 26px; font-weight: 600; color: #ffffff; margin-bottom: 2px; }
+        .reg-subtitle { color: #9CA3AF; font-size: 14px; margin-bottom: 20px; }
+        .reg-label { color: #A3A8B8; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 6px; margin-top: 12px; }
+        .reg-input { background-color: #10121C; border: 1px solid #29304B; border-radius: 12px; padding: 14px 16px; color: #ffffff; width: 100%; font-size: 14px; transition: 0.2s; outline: none; }
+        .reg-input:focus { border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        .reg-input::placeholder { color: #5A627A; }
+        .show-password-btn-reg { background-color: #1F2533; border-radius: 8px; color: #ffffff; font-size: 13px; font-weight: 500; padding: 6px 14px; border: none; cursor: pointer; transition: 0.2s; }
+        .show-password-btn-reg:hover { background-color: #2C3443; }
+        .btn-back-login { background-color: #1F2533; border-radius: 12px; color: #ffffff; font-weight: 600; font-size: 16px; padding: 14px; width: 100%; text-align: center; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-back-login:hover { background-color: #2C3443; }
+
+        #dropdown-menu { animation: fadeIn 0.15s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Letter Bounce Animation */
+        .bounce-letter { display: inline-block; animation: bounceIn 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        .bounce-letter.white { color: #ffffff; }           /* အဖြူရောင် */
+        .bounce-letter.teal { color: #00D09C; }            /* အစိမ်းရောင် */
+        .bounce-letter.yellow { color: #FACC15; }          /* အဝါရောင် */
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: translateY(20px) scale(0.8); }
+            50% { opacity: 1; transform: translateY(-10px) scale(1.05); }
+            70% { transform: translateY(3px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="px-4 pt-4 space-y-2">
+                {% for category, message in messages %}
+                    <div class="{{ 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' if category == 'success' else 'bg-red-500/10 border border-red-500/30 text-red-400' }} px-4 py-3 rounded-xl text-sm font-medium text-center">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- ============================== -->
+    <!-- 1. Hero/Landing View           -->
+    <!-- ============================== -->
+    <div id="hero-view" class="min-h-screen flex flex-col">
+        <div class="flex items-center justify-between px-5 py-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-blue-600 flex items-center justify-center">
+                    <i class="fa-solid fa-chart-line text-white text-sm"></i>
+                </div>
+                <div>
+                    <div class="text-white font-bold text-lg tracking-wide">Egocrypto</div>
+                    <div class="text-yellow-400 text-[10px] font-semibold tracking-widest">COIN</div>
+                </div>
+            </div>
+            <div class="relative">
+                <button onclick="toggleDropdown()" class="w-10 h-10 rounded-xl bg-gray-800/60 flex items-center justify-center focus:outline-none">
+                    <i class="fa-solid fa-bars text-white text-xl"></i>
+                </button>
+                <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-[#1B212C] border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <button onclick="selectMenu('about')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800/50 transition text-sm"><i class="fa-solid fa-info-circle mr-2 text-gray-400"></i>About us</button>
+                    <button onclick="selectMenu('agreement')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800/50 transition text-sm"><i class="fa-solid fa-file-contract mr-2 text-gray-400"></i>User agreement</button>
+                    <button onclick="selectMenu('login')" class="w-full text-left px-4 py-3 text-white hover:bg-gray-800/50 transition text-sm"><i class="fa-solid fa-right-to-bracket mr-2 text-gray-400"></i>Sign up / Login</button>
+                </div>
+            </div>
+        </div>
+        <div class="flex-1 flex flex-col items-center justify-center px-5 pt-28 pb-10">
+            <span class="ai-badge">AI POWERED SECURE FUTURE READY</span>
+            <h1 id="animated-title" class="hero-title mt-8"></h1>
+            <p class="text-gray-400 text-[15px] leading-7 mt-6 max-w-sm text-center">Harness the power of AI and blockchain analytics to investigate eligible recovery opportunities efficiently, securely, and professionally.</p>
+            <div class="w-full max-w-sm mt-8 space-y-3">
+                <button onclick="showRegister()" class="btn-primary w-full py-4">Create account</button>
+                <button onclick="showLogin()" class="btn-outline-yellow w-full py-4">Login</button>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-10 w-full max-w-sm">
+                <div class="grid-item">AI POWERED</div>
+                <div class="grid-item">SECURE VAULTS</div>
+                <div class="grid-item">FUTURE READY</div>
+                <div class="grid-item">VIP ACCESS</div>
+            </div>
+            <div class="w-full max-w-sm text-left mt-14">
+                <h2 class="text-white font-bold text-[22px] leading-tight">Built for a faster premium crypto experience.</h2>
+                <div class="space-y-4 mt-6">
+                    <div class="feature-card"><div class="feature-title">VAULT</div><div class="feature-desc">Unlock VIP tier access with plan-based rewards and live vault value tracking.</div></div>
+                    <div class="feature-card"><div class="feature-title">AI MINING</div><div class="feature-desc">Follow a guided mining flow with clean confirmations and reward visibility.</div></div>
+                    <div class="feature-card"><div class="feature-title">SECURE WALLET</div><div class="feature-desc">Keep balances, deposits, and purchase states clear across the platform.</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- 2. About Us View               -->
+    <!-- ============================== -->
+    <div id="about-view" class="hidden min-h-screen bg-[#F0F5FA] text-gray-900 py-6">
+        <div class="max-w-md mx-auto px-4">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="showHero()" class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+                <h2 class="text-xl font-bold text-gray-800">About Egocrypto</h2>
+                <div class="w-10"></div>
+            </div>
+            <div class="bg-white rounded-3xl p-6 shadow-sm">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">About Egocrypto</h3>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">Egocrypto is a trading platform designed to deliver clarity, speed, and confidence to users across all experience levels.</p>
+                <div class="bg-[#E3EEF9] rounded-2xl p-5 mb-6">
+                    <p class="text-[#1E3A8A] text-[15px] leading-7 font-medium">Egocrypto was established to address a common gap in the market: platforms are often either overly complex or overly simplified. Our objective is to provide a balanced experience—clean design, effective tools, and transparent communication.</p>
+                </div>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">Our Principles</h4>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Trading should be accessible and understandable.</li>
+                    <li>Risk disclosure must be clear and honest.</li>
+                    <li>Tools should be efficient without unnecessary complexity.</li>
+                    <li>Security and reliability are foundational.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- 3. Agreement View              -->
+    <!-- ============================== -->
+    <div id="agreement-view" class="hidden min-h-screen bg-[#F0F5FA] text-gray-900 py-6">
+        <div class="max-w-md mx-auto px-4">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="showHero()" class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center text-gray-700"><i class="fa-solid fa-arrow-left"></i></button>
+                <h2 class="text-xl font-bold text-gray-800">Egocrypto USER AGREEMENT</h2>
+                <div class="w-10"></div>
+            </div>
+            <div class="bg-white rounded-3xl p-6 shadow-sm">
+                <div class="text-xs text-gray-500 mb-4">Effective Date: 10/12/2025 · Platform Name: Egocrypto</div>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">This User Agreement ("Agreement") is a legally binding contract between you ("User") and Egocrypto ("Company", "We", "Us", or "Our"). By creating an account or using our crypto-related services, you agree to the following terms and conditions.</p>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2 mt-4">1. Eligibility</h4>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>You must be at least 18 years old.</li>
+                    <li>You must have full legal capacity to enter into this Agreement.</li>
+                    <li>You confirm that cryptocurrency use and trading is legal in your country of residence.</li>
+                </ul>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">2. Account Registration</h4>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>You agree to provide accurate, current, and complete information.</li>
+                    <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
+                    <li>All activities conducted under your account are your responsibility.</li>
+                </ul>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">3. Risk Disclosure</h4>
+                <p class="text-gray-800 text-[16px] leading-7 mb-2">Cryptocurrency activities involve high risk, including but not limited to:</p>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Extreme market volatility</li>
+                    <li>Regulatory uncertainty</li>
+                    <li>Technical risks</li>
+                    <li>Total loss of funds</li>
+                </ul>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">By using Egocrypto, you acknowledge that:</p>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>You understand these risks.</li>
+                    <li>You accept full responsibility for your decisions.</li>
+                    <li>Egocrypto does not guarantee profits or returns.</li>
+                </ul>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">4. Deposits and Withdrawals</h4>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Users are responsible for verifying wallet addresses before transactions.</li>
+                    <li>Blockchain transactions are irreversible.</li>
+                    <li>Egocrypto is not responsible for losses due to incorrect transfers or user error.</li>
+                </ul>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">5. Fees</h4>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Egocrypto may charge service, trading, or withdrawal fees.</li>
+                    <li>All applicable fees will be displayed before transaction confirmation.</li>
+                </ul>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">6. Prohibited Activities</h4>
+                <p class="text-gray-800 text-[16px] leading-7 mb-2">Users must NOT:</p>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Engage in illegal activities including money laundering</li>
+                    <li>Use stolen funds</li>
+                    <li>Attempt to hack or exploit the platform</li>
+                    <li>Manipulate markets</li>
+                    <li>Violate any applicable laws or regulations</li>
+                </ul>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">Violation may result in immediate suspension or termination.</p>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">7. Security</h4>
+                <p class="text-gray-800 text-[16px] leading-7 mb-2">While Egocrypto implements reasonable security measures, we cannot guarantee absolute protection against:</p>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Cyber attacks</li>
+                    <li>System failures</li>
+                    <li>Third-party service disruptions</li>
+                </ul>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">Users are strongly encouraged to enable two-factor authentication (2FA).</p>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">8. Limitation of Liability</h4>
+                <p class="text-gray-800 text-[16px] leading-7 mb-2">Egocrypto shall not be liable for:</p>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Market losses</li>
+                    <li>Trading errors</li>
+                    <li>Service interruptions</li>
+                    <li>Losses resulting from user negligence</li>
+                </ul>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">All services are provided "as is" and "at your own risk."</p>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">9. Termination</h4>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">Egocrypto reserves the right to suspend, restrict, or terminate any account at its discretion or as required by law.</p>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">10. Amendments</h4>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">Egocrypto may modify this Agreement at any time. Continued use of the platform constitutes acceptance of updated terms.</p>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">11. Governing Law</h4>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">This Agreement shall be governed by the laws of: United States</p>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">12. Contact Information</h4>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li><strong>Company Name:</strong> Egocrypto</li>
+                    <li><strong>Email:</strong> opendexpro.us@gmail.com</li>
+                    <li><strong>Website:</strong> www.opendexpro.com</li>
+                </ul>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">13. Withdrawal Policy</h4>
+                <h5 class="text-md font-semibold text-gray-800 mb-1">13.1 Withdrawal Processing Time</h5>
+                <p class="text-gray-800 text-[16px] leading-7 mb-4">All withdrawal requests must be formally submitted through the Egocrypto platform. Once a withdrawal request is approved, processing may take 7–10 business days before funds are released. Processing time may vary depending on compliance review, security verification, and network conditions.</p>
+                <h5 class="text-md font-semibold text-gray-800 mb-1">13.2 Withdrawal Fees</h5>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Withdrawal fees may apply.</li>
+                    <li>Fees may vary depending on the user’s account size, profit level, and total returns.</li>
+                    <li>Applicable fees will be communicated before final withdrawal confirmation.</li>
+                    <li>Egocrypto reserves the right to adjust withdrawal fee structures at its discretion.</li>
+                </ul>
+                <h5 class="text-md font-semibold text-gray-800 mb-1">13.3 Network Fees and Advance Payment</h5>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Blockchain network fees and withdrawal service fees must be paid in advance before funds are released.</li>
+                    <li>Failure to complete required fee payments may result in delays or cancellation of the withdrawal request.</li>
+                    <li>This policy is implemented as part of Egocrypto’s fraud prevention and security procedures.</li>
+                </ul>
+                <h5 class="text-md font-semibold text-gray-800 mb-1">13.4 Withdrawal Charge Confirmation</h5>
+                <ul class="text-gray-800 text-[16px] leading-7 list-disc pl-5 mb-4 space-y-1">
+                    <li>Users must contact official Egocrypto Customer Support to confirm applicable withdrawal charges based on their account size.</li>
+                    <li>Withdrawal fees are determined according to internal risk management and account classification policies.</li>
+                </ul>
+                <p class="text-xs text-gray-500 mt-6">Last updated: 10/12/2025</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- 4. LOGIN VIEW                  -->
+    <!-- ============================== -->
+    <div id="login-view" class="hidden min-h-screen flex items-center justify-center px-4 py-6">
+        <div class="auth-container">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="auth-title">Login</h2>
+                <button onclick="showHero()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            <p class="auth-subtitle">Welcome back to Egocrypto.</p>
+
+            <form method="POST" action="/login" class="space-y-2">
+                <div>
+                    <label class="auth-label">Username</label>
+                    <input type="text" name="username" required class="auth-input" placeholder="Enter username">
+                </div>
+                <div>
+                    <label class="auth-label">Password</label>
+                    <div class="relative">
+                        <input type="password" id="login-password" name="password" required class="auth-input pr-[70px]" placeholder="••••••••">
+                        <button type="button" onclick="togglePassword('login-password', this)" class="show-password-btn-login absolute right-2 top-2.5">Show</button>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-1 mb-4">
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+                <button type="submit" class="auth-btn-gradient">Login</button>
+            </form>
+            <p class="text-center text-gray-400 text-sm mt-4">
+                If you don't have an account, <button onclick="showRegister()" class="text-yellow-400 font-semibold hover:underline">create account</button>.
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- 5. REGISTER VIEW               -->
+    <!-- ============================== -->
+    <div id="register-view" class="hidden min-h-screen flex items-center justify-center px-4 py-6">
+        <div class="reg-container">
+            <div class="flex items-center justify-between mb-1">
+                <h2 class="reg-title">Create your account</h2>
+                <button onclick="showHero()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="reg-subtitle">Sign up to get started with Egocrypto.</p>
+
+            <form id="registerForm" method="POST" action="/register" class="space-y-1">
+                <div>
+                    <label class="reg-label">Country</label>
+                    <select name="country" id="countrySelect" onchange="updateCountryCode()" class="reg-input appearance-none bg-[#10121C] text-white border border-[#29304B]">
+                    </select>
+                </div>
+                <div>
+                    <label class="reg-label">Phone Number</label>
+                    <div class="flex items-end gap-3 mb-0.5">
+                        <div id="phone-prefix" class="w-16 bg-[#10121C] rounded-xl py-3 text-white text-sm border border-[#29304B] text-center font-medium">+1</div>
+                        <input type="tel" name="phone" class="reg-input flex-1" placeholder="Phone number" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="reg-label">Email</label>
+                    <input type="email" name="email" id="reg-email" class="reg-input" placeholder="you@email.com" required>
+                </div>
+                <div>
+                    <label class="reg-label">Username</label>
+                    <input type="text" name="username" class="reg-input" placeholder="your username" required>
+                </div>
+                <div>
+                    <label class="reg-label">Password</label>
+                    <div class="relative">
+                        <input type="password" id="reg-password" name="password" class="reg-input pr-[75px]" placeholder="......" required>
+                        <button type="button" onclick="togglePassword('reg-password', this)" class="show-password-btn-reg absolute right-2 top-2.5">Show</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="reg-label">Confirm Password</label>
+                    <div class="relative">
+                        <input type="password" id="reg-confirm-password" name="confirm_password" class="reg-input pr-[75px]" placeholder="......" required>
+                        <button type="button" onclick="togglePassword('reg-confirm-password', this)" class="show-password-btn-reg absolute right-2 top-2.5">Show</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary w-full py-4 mt-3">Register</button>
+                <button type="button" onclick="showLogin()" class="btn-back-login mt-2">Back to Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- 6. Register Success Modal      -->
+    <!-- ============================== -->
+    <div id="register-success-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4 backdrop-blur-sm">
+        <div class="bg-[#1B212C] max-w-sm w-full rounded-2xl p-6 text-center border border-gray-700/50 shadow-2xl">
+            <div class="w-14 h-14 rounded-full bg-[#1E88E5]/20 flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-check text-[#42A5F5] text-3xl"></i>
+            </div>
+            <h4 class="text-white text-xl font-bold mb-3">Welcome aboard!</h4>
+            <p class="text-gray-300 text-sm mb-6 leading-relaxed">Registered successfully! Start using your account now.</p>
+            <button onclick="showLogin()" class="btn-primary w-full py-3 text-sm font-semibold">Login Now</button>
+        </div>
+    </div>
+
+    <div class="text-center text-gray-600 text-xs pb-6">Egocrypto App v1.0.0</div>
+
+    <script>
+        // Bounce Animation
+        const titleTexts = ['EgoCrypto', 'AI POWERED'];  // 👈 ဒီမှာ EgoRecovery ကနေ EgoCrypto ပြောင်းလိုက်ပါတယ်။
+        let titleIndex = 0;
+        let titleInterval = null;
+
+        function showAnimatedTitle(text) {
+            const el = document.getElementById('animated-title');
+            if (!el) return;
+            el.innerHTML = '';
+            text.split('').forEach((char, i) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                if (text === 'EgoCrypto') {
+                    // Ego အပိုင်း (ပထမ 3 လုံး) က အဖြူရောင်။
+                    // Crypto အပိုင်း (ကျန်တာ) က အစိမ်းရောင် (teal)။
+                    span.className = 'bounce-letter ' + (i < 3 ? 'white' : 'teal');
+                } else {
+                    // AI POWERED ဖြစ်ရင် AI (ပထမ 2 လုံး) က အဖြူရောင်၊ POWERED က အဝါရောင်။
+                    span.className = 'bounce-letter ' + (i < 2 ? 'white' : 'yellow');
+                }
+                span.style.animationDelay = (i * 0.1) + 's';
+                el.appendChild(span);
+            });
+        }
+
+        function startTitleAnimation() {
+            showAnimatedTitle(titleTexts[titleIndex]);
+            titleInterval = setInterval(() => {
+                titleIndex = (titleIndex + 1) % titleTexts.length;
+                showAnimatedTitle(titleTexts[titleIndex]);
+            }, 3000);
+        }
+
+        function hideAllViews() {
+            document.getElementById('hero-view').classList.add('hidden');
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('register-view').classList.add('hidden');
+            document.getElementById('about-view').classList.add('hidden');
+            document.getElementById('agreement-view').classList.add('hidden');
+            document.getElementById('register-success-modal').classList.add('hidden');
+        }
+        function showHero() { hideAllViews(); document.getElementById('hero-view').classList.remove('hidden'); }
+        function showLogin() { hideAllViews(); document.getElementById('login-view').classList.remove('hidden'); }
+        function showRegister() { hideAllViews(); document.getElementById('register-view').classList.remove('hidden'); }
+        function showAbout() { hideAllViews(); document.getElementById('about-view').classList.remove('hidden'); }
+        function showAgreement() { hideAllViews(); document.getElementById('agreement-view').classList.remove('hidden'); }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') { input.type = 'text'; btn.innerText = 'Hide'; } 
+            else { input.type = 'password'; btn.innerText = 'Show'; }
+        }
+
+        function toggleDropdown() { document.getElementById('dropdown-menu').classList.toggle('hidden'); }
+        function selectMenu(action) {
+            document.getElementById('dropdown-menu').classList.add('hidden');
+            if (action === 'about') showAbout();
+            else if (action === 'agreement') showAgreement();
+            else if (action === 'login') showLogin();
+        }
+
+        // 90+ Countries Data
+        const countryData = {
+            'US': { name: 'United States', code: '+1' },
+            'CA': { name: 'Canada', code: '+1' },
+            'GB': { name: 'United Kingdom', code: '+44' },
+            'AU': { name: 'Australia', code: '+61' },
+            'NZ': { name: 'New Zealand', code: '+64' },
+            'DE': { name: 'Germany', code: '+49' },
+            'FR': { name: 'France', code: '+33' },
+            'IT': { name: 'Italy', code: '+39' },
+            'ES': { name: 'Spain', code: '+34' },
+            'NL': { name: 'Netherlands', code: '+31' },
+            'SE': { name: 'Sweden', code: '+46' },
+            'CH': { name: 'Switzerland', code: '+41' },
+            'AT': { name: 'Austria', code: '+43' },
+            'BE': { name: 'Belgium', code: '+32' },
+            'JP': { name: 'Japan', code: '+81' },
+            'CN': { name: 'China', code: '+86' },
+            'KR': { name: 'South Korea', code: '+82' },
+            'TW': { name: 'Taiwan', code: '+886' },
+            'HK': { name: 'Hong Kong', code: '+852' },
+            'MO': { name: 'Macau', code: '+853' },
+            'SG': { name: 'Singapore', code: '+65' },
+            'MY': { name: 'Malaysia', code: '+60' },
+            'TH': { name: 'Thailand', code: '+66' },
+            'VN': { name: 'Vietnam', code: '+84' },
+            'PH': { name: 'Philippines', code: '+63' },
+            'ID': { name: 'Indonesia', code: '+62' },
+            'IN': { name: 'India', code: '+91' },
+            'PK': { name: 'Pakistan', code: '+92' },
+            'BD': { name: 'Bangladesh', code: '+880' },
+            'NP': { name: 'Nepal', code: '+977' },
+            'LK': { name: 'Sri Lanka', code: '+94' },
+            'MV': { name: 'Maldives', code: '+960' },
+            'BN': { name: 'Brunei', code: '+673' },
+            'MN': { name: 'Mongolia', code: '+976' },
+            'KZ': { name: 'Kazakhstan', code: '+7' },
+            'UZ': { name: 'Uzbekistan', code: '+998' },
+            'AE': { name: 'UAE', code: '+971' },
+            'SA': { name: 'Saudi Arabia', code: '+966' },
+            'KW': { name: 'Kuwait', code: '+965' },
+            'QA': { name: 'Qatar', code: '+974' },
+            'OM': { name: 'Oman', code: '+968' },
+            'BH': { name: 'Bahrain', code: '+973' },
+            'JO': { name: 'Jordan', code: '+962' },
+            'LB': { name: 'Lebanon', code: '+961' },
+            'IL': { name: 'Israel', code: '+972' },
+            'TR': { name: 'Turkey', code: '+90' },
+            'BR': { name: 'Brazil', code: '+55' },
+            'MX': { name: 'Mexico', code: '+52' },
+            'AR': { name: 'Argentina', code: '+54' },
+            'CL': { name: 'Chile', code: '+56' },
+            'CO': { name: 'Colombia', code: '+57' },
+            'PE': { name: 'Peru', code: '+51' },
+            'VE': { name: 'Venezuela', code: '+58' },
+            'EC': { name: 'Ecuador', code: '+593' },
+            'CR': { name: 'Costa Rica', code: '+506' },
+            'PA': { name: 'Panama', code: '+507' },
+            'DO': { name: 'Dominican Republic', code: '+1' },
+            'JM': { name: 'Jamaica', code: '+1' },
+            'RU': { name: 'Russia', code: '+7' },
+            'PL': { name: 'Poland', code: '+48' },
+            'CZ': { name: 'Czech Republic', code: '+420' },
+            'HU': { name: 'Hungary', code: '+36' },
+            'RO': { name: 'Romania', code: '+40' },
+            'GR': { name: 'Greece', code: '+30' },
+            'IE': { name: 'Ireland', code: '+353' },
+            'PT': { name: 'Portugal', code: '+351' },
+            'FI': { name: 'Finland', code: '+358' },
+            'NO': { name: 'Norway', code: '+47' },
+            'DK': { name: 'Denmark', code: '+45' },
+            'BG': { name: 'Bulgaria', code: '+359' },
+            'HR': { name: 'Croatia', code: '+385' },
+            'RS': { name: 'Serbia', code: '+381' },
+            'UA': { name: 'Ukraine', code: '+380' },
+            'ZA': { name: 'South Africa', code: '+27' },
+            'EG': { name: 'Egypt', code: '+20' },
+            'MA': { name: 'Morocco', code: '+212' },
+            'TN': { name: 'Tunisia', code: '+216' },
+            'DZ': { name: 'Algeria', code: '+213' },
+            'KE': { name: 'Kenya', code: '+254' },
+            'NG': { name: 'Nigeria', code: '+234' },
+            'GH': { name: 'Ghana', code: '+233' },
+            'TZ': { name: 'Tanzania', code: '+255' },
+            'UG': { name: 'Uganda', code: '+256' },
+            'MU': { name: 'Mauritius', code: '+230' },
+            'SC': { name: 'Seychelles', code: '+248' },
+            'CY': { name: 'Cyprus', code: '+357' },
+            'MM': { name: 'Myanmar', code: '+95' },
+            'KH': { name: 'Cambodia', code: '+855' },
+            'LA': { name: 'Laos', code: '+856' },
+            'TL': { name: 'Timor-Leste', code: '+670' }
+        };
+
+        function populateCountries() {
+            const select = document.getElementById('countrySelect');
+            for (const [code, data] of Object.entries(countryData)) {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = data.name + ' (' + data.code + ')';
+                select.appendChild(option);
+            }
+        }
+        function updateCountryCode() {
+            const select = document.getElementById('countrySelect');
+            const selectedCode = select.value;
+            const prefixBox = document.getElementById('phone-prefix');
+            if (countryData[selectedCode]) prefixBox.textContent = countryData[selectedCode].code;
+        }
+
+        populateCountries();
+        startTitleAnimation();
+    </script>
+</body>
+</html>

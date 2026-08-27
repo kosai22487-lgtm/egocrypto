@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-4 pb-20 text-gray-100 max-w-md mx-auto p-4">
+    <h2 class="text-xl font-bold text-teal-400">Coin Convert & Swap</h2>
+
+    <!-- Wallet Balance Display -->
+    <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl p-4 shadow-xl">
+        <h3 class="text-xs text-gray-400 mb-2 font-medium">My Wallet Balances</h3>
+        <div class="grid grid-cols-3 gap-2 text-sm font-mono">
+            <div class="bg-[#1b2230] p-2 rounded-xl text-center">
+                <div class="text-[10px] text-gray-400">BTC</div>
+                <div id="wallet-btc" class="text-emerald-400 font-bold">0.00</div>
+            </div>
+            <div class="bg-[#1b2230] p-2 rounded-xl text-center">
+                <div class="text-[10px] text-gray-400">ETH</div>
+                <div id="wallet-eth" class="text-emerald-400 font-bold">0.00</div>
+            </div>
+            <div class="bg-[#1b2230] p-2 rounded-xl text-center">
+                <div class="text-[10px] text-gray-400">USDT</div>
+                <div id="wallet-usdt" class="text-emerald-400 font-bold">0.00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Swap Form -->
+    <div class="bg-[#12161f] border border-gray-800/80 rounded-2xl p-4 shadow-xl space-y-4">
+        <div>
+            <label class="text-xs text-gray-400 block mb-1">From</label>
+            <div class="flex gap-2">
+                <select id="from-coin" class="bg-[#1b2230] border border-gray-700 rounded-xl p-3 text-white w-1/3 focus:outline-none">
+                    <option value="USDT">USDT</option>
+                    <option value="BTC">BTC</option>
+                    <option value="ETH">ETH</option>
+                </select>
+                <input type="number" id="from-amount" placeholder="0.00" class="bg-[#1b2230] border border-gray-700 rounded-xl p-3 text-white w-2/3 focus:outline-none font-mono">
+            </div>
+        </div>
+
+        <div class="text-center">
+            <span class="bg-[#1b2230] text-teal-400 p-2 rounded-full inline-block text-sm shadow">↓</span>
+        </div>
+
+        <div>
+            <label class="text-xs text-gray-400 block mb-1">To (Live Price Calculated)</label>
+            <div class="flex gap-2">
+                <select id="to-coin" class="bg-[#1b2230] border border-gray-700 rounded-xl p-3 text-white w-1/3 focus:outline-none">
+                    <option value="BTC">BTC</option>
+                    <option value="ETH" selected>ETH</option>
+                    <option value="USDT">USDT</option>
+                </select>
+                <input type="text" id="to-amount" placeholder="0.00" readonly class="bg-[#1b2230] border border-gray-700 rounded-xl p-3 text-teal-300 w-2/3 font-mono">
+            </div>
+        </div>
+
+        <button onclick="performConvert()" class="w-full bg-teal-500 hover:bg-teal-600 text-gray-950 font-bold py-3.5 rounded-xl transition shadow-lg">
+            Convert Now
+        </button>
+    </div>
+
+    <script>
+        let currentPrices = {};
+
+        const coinIdMap = {
+            'BTC': 'bitcoin',
+            'ETH': 'ethereum',
+            'USDT': 'tether'
+        };
+
+        // Fetch live rates from CoinGecko (works worldwide)
+        async function fetchLiveRates() {
+            try {
+                const ids = Object.values(coinIdMap).join(',');
+                const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                for (const [symbol, id] of Object.entries(coinIdMap)) {
+                    if (data[id] && data[id].usd) {
+                        currentPrices[symbol] = data[id].usd;
+                    }
+                }
+                currentPrices['USDT'] = 1.0;
+                calculateSwap();
+            } catch (err) {
+                console.error("Live price fetch error:", err);
+            }
+        }
+
+        // Fetch user wallet balances
+        async function fetchWalletData() {
+            try {
+                const res = await fetch('/api/user/wallet');
+                const result = await res.json();
+                if(result.success) {
+                    document.getElementById('wallet-btc').innerText = result.balances.BTC || 0;
+                    document.getElementById('wallet-eth').innerText = result.balances.ETH || 0;
+                    document.getElementById('wallet-usdt').innerText = result.balances.USDT || 0;
+                }
+            } catch (err) {
+                console.error("Wallet fetch error:", err);
+            }
+        }
+
+        // Calculate swap amount
+        function calculateSwap() {
+            const fromC = document.getElementById('from-coin').value;
+            const toC = document.getElementById('to-coin').value;
+            const amountVal = parseFloat(document.getElementById('from-amount').value) || 0;
+
+            if(!currentPrices[fromC] || !currentPrices[toC]) return;
+
+            const inUsdt = amountVal * currentPrices[fromC];
+            const finalVal = inUsdt / currentPrices[toC];
+
+            document.getElementById('to-amount').value = finalVal.toFixed(6);
+        }
+
+        document.getElementById('from-amount').addEventListener('input', calculateSwap);
+        document.getElementById('from-coin').addEventListener('change', fetchLiveRates);
+        document.getElementById('to-coin').addEventListener('change', fetchLiveRates);
+
+        // Perform conversion
+        async function performConvert() {
+            const fromC = document.getElementById('from-coin').value;
+            const toC = document.getElementById('to-coin').value;
+            const amountVal = parseFloat(document.getElementById('from-amount').value);
+
+            if(!amountVal || amountVal <= 0) {
+                alert("Please enter a valid amount.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/convert', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        from_coin: fromC,
+                        to_coin: toC,
+                        amount: amountVal,
+                        prices: currentPrices
+                    })
+                });
+                const resJson = await res.json();
+
+                if(resJson.success) {
+                    alert("Conversion successful.");
+                    fetchWalletData();
+                    // Refresh Wallet Balance if function exists
+                    if (typeof fetchWalletBalances === 'function') {
+                        fetchWalletBalances();
+                    }
+                } else {
+                    alert("Error: " + resJson.message);
+                }
+            } catch (err) {
+                console.error("Conversion error:", err);
+            }
+        }
+
+        fetchLiveRates();
+        fetchWalletData();
+        setInterval(fetchLiveRates, 30000);
+    </script>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .arbi-container { max-width: 480px; margin: 0 auto; padding: 0 16px 30px; color: #e0e0e0; }
+    .arbi-header { display: flex; align-items: center; padding: 16px 0; border-bottom: 1px solid #1f2937; margin-bottom: 20px; }
+    .arbi-back { background: none; border: none; color: #9ca3af; font-size: 20px; cursor: pointer; }
+    .arbi-title { flex-grow: 1; text-align: center; font-weight: 700; font-size: 18px; color: #ffffff; }
+    .arbi-hero { background: linear-gradient(135deg, #0e1b2b, #102a42); border: 1px solid #1f2937; border-radius: 16px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .arbi-hero h2 { color: #38bdf8; margin: 0; font-size: 18px; }
+    .arbi-hero p { margin: 6px 0 0; font-size: 13px; color: #94a3b8; }
+    .arbi-plan-card { background: #12161f; border: 1px solid #1f2937; border-radius: 16px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .arbi-plan-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; padding-bottom: 15px; }
+    .arbi-plan-name { font-weight: 700; font-size: 18px; color: #ffffff; display: flex; align-items: center; gap: 8px; }
+    .arbi-plan-days { font-weight: 700; font-size: 16px; color: #38bdf8; }
+    .arbi-info-grid { display: flex; justify-content: space-between; margin: 20px 0; }
+    .arbi-info-label { color: #6b7280; font-size: 12px; }
+    .arbi-info-value { color: #ffffff; font-size: 16px; font-weight: 600; margin-top: 4px; }
+    .arbi-currency-title { color: #6b7280; font-size: 12px; margin-bottom: 8px; }
+    .arbi-currency-icons { display: flex; gap: 10px; margin-bottom: 20px; }
+    .arbi-currency-icons img { width: 28px; height: 28px; border-radius: 50%; background: #1e293b; padding: 3px; }
+    .arbi-limit-row { display: flex; justify-content: space-between; border-top: 1px solid #1f2937; border-bottom: 1px solid #1f2937; padding: 12px 0; margin-bottom: 20px; color: #9ca3af; font-size: 13px; }
+    .arbi-input-section { margin-bottom: 20px; }
+    .arbi-input-label { font-weight: 600; color: #e0e0e0; margin-bottom: 8px; }
+    .arbi-input-group { display: flex; align-items: center; border: 1px solid #2d3b52; background: #0b0e14; padding: 12px 14px; border-radius: 12px; }
+    .arbi-input-group span { color: #38bdf8; font-weight: 700; margin-right: 8px; }
+    .arbi-input-group input { background: transparent; border: none; flex-grow: 1; outline: none; color: #ffffff; font-size: 15px; }
+    .arbi-host-btn { width: 100%; background: #2563eb; color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .arbi-host-btn:hover { background: #1d4ed8; }
+    .arbi-features { margin-top: 20px; font-size: 13px; color: #34d399; }
+    .arbi-features p { margin: 6px 0; display: flex; align-items: center; gap: 8px; }
+</style>
+
+<div class="arbi-container">
+    <div class="arbi-header">
+        <button class="arbi-back" onclick="window.location.href='/ai-arbitrage'">&#10094;</button>
+        <span class="arbi-title">Arbitrage</span>
+    </div>
+
+    <div class="arbi-hero">
+        <div>
+            <h2>Join AI Arbitrage</h2>
+            <p>Smart trading across 200+ global exchanges</p>
+        </div>
+        <div style="font-size: 36px; color: #38bdf8;">⚡</div>
+    </div>
+
+    <div class="arbi-plan-card">
+        <div class="arbi-plan-head">
+            <div class="arbi-plan-name">
+                {{ plan.name }}
+            </div>
+            <div class="arbi-plan-days">{{ plan.days }}</div>
+        </div>
+
+        <div class="arbi-info-grid">
+            <div>
+                <div class="arbi-info-label">Quantity</div>
+                <div class="arbi-info-value">{{ plan.quantity }}</div>
+            </div>
+            <div>
+                <div class="arbi-info-label">Daily income</div>
+                <div class="arbi-info-value" style="color: #34d399;">{{ plan.income }}</div>
+            </div>
+        </div>
+
+        <div class="arbi-currency-title">Arbitrage Currency</div>
+        <div class="arbi-currency-icons">
+            <img src="https://assets.coincap.io/assets/icons/btc@2x.png" alt="BTC">
+            <img src="https://assets.coincap.io/assets/icons/eth@2x.png" alt="ETH">
+            <img src="https://assets.coincap.io/assets/icons/usdt@2x.png" alt="USDT">
+            <img src="https://assets.coincap.io/assets/icons/sol@2x.png" alt="SOL">
+            <img src="https://assets.coincap.io/assets/icons/doge@2x.png" alt="DOGE">
+        </div>
+
+        <div class="arbi-limit-row">
+            <span>Participation limit</span>
+            <span>{{ plan.limit }} / Person</span>
+        </div>
+
+        <div class="arbi-input-section">
+            <div class="arbi-input-label">Escrow Quantity</div>
+            <div class="arbi-input-group">
+                <span>₮</span>
+                <input type="number" id="escrow-plan-amount" placeholder="Please enter quantity" class="text-white">
+            </div>
+        </div>
+
+        <button class="arbi-host-btn" onclick="submitPlan()">Now Hosting</button>
+
+        <div class="arbi-features">
+            <p>✔ Daily income sent to your USDT wallet</p>
+            <p>✔ Artificial intelligence works 24 hours a day</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function submitPlan() {
+        const amountInput = document.getElementById('escrow-plan-amount');
+        if (!amountInput) {
+            alert('Input field not found!');
+            return;
+        }
+        const amount = parseFloat(amountInput.value);
+        if (!amount || amount <= 0) {
+            alert('Please enter a valid escrow quantity.');
+            return;
+        }
+
+        const pathParts = window.location.pathname.split('/');
+        const planId = pathParts[pathParts.length - 1];
+
+        fetch('/api/plan/activate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ plan_id: planId, amount: amount })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.href = '/plan-countdown/' + data.plan_id;
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error activating plan.');
+        });
+    }
+</script>
+
+{% endblock %}
