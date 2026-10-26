@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Egocrypto</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen p-4">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-teal-400"><i class="fa-solid fa-shield-halved mr-2"></i>Admin Dashboard</h1>
+            <a href="/admin/logout" class="bg-rose-500/20 text-rose-400 border border-rose-500/30 hover:bg-rose-500 hover:text-white px-4 py-2 rounded-xl text-xs font-bold">Logout</a>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex space-x-1 bg-gray-900 rounded-xl p-1 mb-6">
+            <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn flex-1 py-2.5 text-sm font-bold rounded-lg bg-teal-600 text-gray-950 transition">Settings</button>
+            <button onclick="switchTab('users')" id="tab-users" class="tab-btn flex-1 py-2.5 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition">User Management</button>
+            <button onclick="switchTab('chat')" id="tab-chat" class="tab-btn flex-1 py-2.5 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition">Customer Chat</button>
+        </div>
+
+        <!-- Page 1: Settings -->
+        <div id="page-settings" class="space-y-6">
+            <!-- Deposit Addresses -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-wallet mr-2"></i>Deposit Addresses</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {% for coin in ['BTC', 'ETH', 'USDT'] %}
+                    <div class="bg-gray-950 border border-gray-700 rounded-xl p-4">
+                        <div class="text-white font-bold mb-2">{{ coin }}</div>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="update_address">
+                            <input type="hidden" name="coin" value="{{ coin }}">
+                            <input type="text" name="new_address" value="{{ addresses[coin] if addresses else '' }}" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white mb-2">
+                            <button type="submit" class="w-full bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold py-1.5 rounded-lg text-xs">Update</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Customer Service Settings -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-headset mr-2"></i>Customer Service Settings</h3>
+                <div class="space-y-4 max-w-md">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Telegram Username</label>
+                        <input type="text" id="telegram-link" placeholder="@username" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">WhatsApp Number</label>
+                        <input type="text" id="whatsapp-number" placeholder="+959123456789" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-white text-sm">
+                    </div>
+                    <button onclick="saveSettings()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold py-2.5 rounded-xl text-sm w-full max-w-xs">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 2: User Management -->
+        <div id="page-users" class="hidden">
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 overflow-hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-teal-400"><i class="fa-solid fa-users mr-2"></i>User Management</h3>
+                    <span class="text-xs text-gray-400">Total Users: {{ users|length if users else 0 }}</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-950 text-gray-400 uppercase">
+                            <tr>
+                                <th class="p-2">ID</th>
+                                <th class="p-2">Username</th>
+                                <th class="p-2">Email</th>
+                                <th class="p-2">Balance</th>
+                                <th class="p-2">Status</th>
+                                <th class="p-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr class="border-t border-gray-800">
+                                <td class="p-2">{{ u.id }}</td>
+                                <td class="p-2 text-white font-bold">{{ u.username }}</td>
+                                <td class="p-2 text-gray-400">{{ u.email }}</td>
+                                <td class="p-2 text-emerald-400 font-bold">${{ "%.2f"|format(u.usdt_balance) }}</td>
+                                <td class="p-2">{{ u.status }}</td>
+                                <td class="p-2 space-y-1">
+                                    <form method="POST" class="flex gap-1">
+                                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                                        <input type="number" step="0.01" name="amount" placeholder="Amount" class="w-20 bg-gray-950 border border-gray-700 px-2 py-1 text-xs text-white rounded-lg">
+                                        <button type="submit" name="action" value="add_balance" class="bg-emerald-600/20 text-emerald-400 px-2 py-1 rounded-lg text-xs">+</button>
+                                        <button type="submit" name="action" value="take_balance" class="bg-rose-600/20 text-rose-400 px-2 py-1 rounded-lg text-xs">-</button>
+                                    </form>
+                                    <form method="POST" class="flex gap-1">
+                                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                                        <select name="forced_result" class="bg-gray-950 border border-gray-700 px-2 py-1 text-xs text-white rounded-lg">
+                                            <option value="auto">Auto</option>
+                                            <option value="win">Win</option>
+                                            <option value="loss">Loss</option>
+                                        </select>
+                                        <button type="submit" name="action" value="set_result" class="bg-teal-600/20 text-teal-400 px-2 py-1 rounded-lg text-xs">Set</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 3: Customer Chat -->
+        <div id="page-chat" class="hidden">
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <h3 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-comments mr-2"></i>Customer Chat</h3>
+                <div id="admin-chat-messages" class="h-80 overflow-y-auto bg-black/30 rounded-xl p-3 mb-3 space-y-2"></div>
+                <div class="flex gap-2">
+                    <input type="text" id="admin-chat-input" placeholder="Reply to user..." class="flex-1 bg-gray-950 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-teal-500">
+                    <button onclick="sendAdminChatMessage()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold px-5 py-2.5 rounded-xl text-sm transition">Send</button>
+                </div>
+                <a href="https://t.me/apexledger119" target="_blank" class="inline-block mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-6 rounded-xl text-sm transition">
+                    <i class="fa-solid fa-paper-plane mr-1"></i> Open Telegram
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('bg-teal-600', 'text-gray-950'));
+            document.getElementById('tab-' + tab).classList.add('bg-teal-600', 'text-gray-950');
+            document.getElementById('page-settings').classList.add('hidden');
+            document.getElementById('page-users').classList.add('hidden');
+            document.getElementById('page-chat').classList.add('hidden');
+            document.getElementById('page-' + tab).classList.remove('hidden');
+        }
+
+        function loadSettings() {
+            fetch('/api/get-settings').then(r => r.json()).then(data => {
+                document.getElementById('telegram-link').value = data.telegram_link || '';
+                document.getElementById('whatsapp-number').value = data.whatsapp_number || '';
+            });
+        }
+        function saveSettings() {
+            let telegram = document.getElementById('telegram-link').value.trim();
+            if (telegram && !telegram.startsWith('http')) {
+                if (telegram.startsWith('@')) {
+                    telegram = 'https://t.me/' + telegram.substring(1);
+                } else {
+                    telegram = 'https://t.me/' + telegram;
+                }
+            }
+            const whatsapp = document.getElementById('whatsapp-number').value;
+            fetch('/api/admin/settings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ telegram_link: telegram, whatsapp_number: whatsapp })
+            }).then(r => r.json()).then(data => alert(data.message));
+        }
+        loadSettings();
+    </script>
+
+    <script>
+        function loadAdminChatMessages() {
+            fetch('/api/chat/messages')
+                .then(r => r.json())
+                .then(messages => {
+                    const container = document.getElementById('admin-chat-messages');
+                    if (messages.length === 0) {
+                        container.innerHTML = '<p class="text-gray-500 text-sm text-center">No messages yet.</p>';
+                        return;
+                    }
+                    container.innerHTML = messages.map(msg => `
+                        <div class="mb-2 ${msg.sender === 'admin' ? 'text-right' : 'text-left'}">
+                            <div class="inline-block max-w-[80%] bg-gray-800 rounded-xl px-3 py-2 text-sm">
+                                <div class="text-xs text-teal-400 font-bold">${msg.sender}</div>
+                                <div class="text-white">${msg.message}</div>
+                                <div class="text-[10px] text-gray-500">${msg.created_at}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    container.scrollTop = container.scrollHeight;
+                });
+        }
+
+        function sendAdminChatMessage() {
+            const input = document.getElementById('admin-chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            fetch('/api/chat/send', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: message })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = '';
+                    loadAdminChatMessages();
+                }
+            });
+        }
+
+        loadAdminChatMessages();
+        setInterval(loadAdminChatMessages, 3000);
+    </script>
+
+</body>
+</html>

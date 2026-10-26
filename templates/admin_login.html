@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-950 text-gray-100 flex items-center justify-center min-h-screen">
+    <div class="max-w-md w-full bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-2xl space-y-6">
+        <div class="text-center space-y-2">
+            <h1 class="text-2xl font-bold text-teal-400">Admin Control Panel</h1>
+            <p class="text-xs text-gray-400">Enter secure credentials to manage platform</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex space-x-1 bg-gray-950 rounded-xl p-1">
+            <button onclick="showLoginTab()" id="tab-login" class="flex-1 py-2 text-sm font-bold rounded-lg bg-teal-600 text-gray-950 transition">Login</button>
+            <button onclick="showResetTab()" id="tab-reset" class="flex-1 py-2 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition">Reset Password</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form" class="space-y-4">
+            <form method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Admin Username</label>
+                    <input type="text" name="username" required class="w-full bg-gray-950 border border-gray-700 px-3 py-2 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Admin Password</label>
+                    <input type="password" name="password" required class="w-full bg-gray-950 border border-gray-700 px-3 py-2 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500">
+                </div>
+                <button type="submit" class="w-full bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold py-2.5 rounded-xl transition text-sm cursor-pointer">
+                    Access Panel
+                </button>
+            </form>
+            <div class="text-center">
+                <a href="/login" class="text-xs text-gray-400 hover:text-gray-200">← Back to User Login</a>
+            </div>
+        </div>
+
+        <!-- Reset Password Form (hidden) -->
+        <div id="reset-form" class="hidden space-y-4">
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Admin Username or Email</label>
+                <input type="text" id="forgot-identifier" class="w-full bg-gray-950 border border-gray-700 px-3 py-2 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500">
+            </div>
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Verification Code</label>
+                <input type="text" id="forgot-code" class="w-full bg-gray-950 border border-gray-700 px-3 py-2 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500">
+            </div>
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">New Password</label>
+                <input type="password" id="forgot-new-password" class="w-full bg-gray-950 border border-gray-700 px-3 py-2 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500">
+            </div>
+            <div>
+                <label class="block text-xs uppercase text-gray-400 font-semibold mb-1">Confirm New Password</label>
+                <input type="password" id="forgot-confirm-password" class="w-full bg-gray-950 border border-gray-700 px-3 py-2 rounded-xl text-sm text-white focus:outline-none focus:border-teal-500">
+            </div>
+            <button onclick="sendResetCode()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer">
+                <i class="fa-solid fa-envelope mr-2"></i>Send Code
+            </button>
+            <button onclick="resetAdminPassword()" class="w-full bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold py-2.5 rounded-xl transition text-sm cursor-pointer">
+                <i class="fa-solid fa-key mr-2"></i>Reset Password
+            </button>
+            <div class="text-center">
+                <a href="/login" class="text-xs text-gray-400 hover:text-gray-200">← Back to User Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLoginTab() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('reset-form').classList.add('hidden');
+            document.getElementById('tab-login').classList.add('bg-teal-600', 'text-gray-950');
+            document.getElementById('tab-login').classList.remove('text-gray-400');
+            document.getElementById('tab-reset').classList.remove('bg-teal-600', 'text-gray-950');
+            document.getElementById('tab-reset').classList.add('text-gray-400');
+        }
+
+        function showResetTab() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('reset-form').classList.remove('hidden');
+            document.getElementById('tab-reset').classList.add('bg-teal-600', 'text-gray-950');
+            document.getElementById('tab-reset').classList.remove('text-gray-400');
+            document.getElementById('tab-login').classList.remove('bg-teal-600', 'text-gray-950');
+            document.getElementById('tab-login').classList.add('text-gray-400');
+        }
+
+        function sendResetCode() {
+            const identifier = document.getElementById('forgot-identifier').value.trim();
+            if (!identifier) { alert('Please enter admin username or email.'); return; }
+            fetch('/forgot-password/request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ identifier: identifier })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Code sent to your email!');
+                } else {
+                    alert(data.message || 'Failed to send code');
+                }
+            })
+            .catch(err => { console.error(err); alert('Network error'); });
+        }
+
+        function resetAdminPassword() {
+            const identifier = document.getElementById('forgot-identifier').value.trim();
+            const code = document.getElementById('forgot-code').value.trim();
+            const new_password = document.getElementById('forgot-new-password').value;
+            const confirm_password = document.getElementById('forgot-confirm-password').value;
+            if (!identifier || !code || !new_password || !confirm_password) {
+                alert('Please fill in all fields.'); return;
+            }
+            fetch('/forgot-password/reset', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ identifier, code, new_password, confirm_password })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Password reset successfully!');
+                    showLoginTab();
+                } else {
+                    alert(data.message || 'Failed to reset password');
+                }
+            })
+            .catch(err => { console.error(err); alert('Network error'); });
+        }
+    </script>
+</body>
+</html>

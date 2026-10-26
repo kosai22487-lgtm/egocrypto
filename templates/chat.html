@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto p-4 pb-20">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
+        <h2 class="text-lg font-bold text-teal-400 mb-4"><i class="fa-solid fa-headset mr-2"></i>Customer Support Chat</h2>
+        
+        <div id="user-chat-messages" style="height: 320px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; display: flex; flex-direction: column;">
+            <!-- Welcome message goes inside here -->
+        </div>
+        
+        <div class="flex gap-2 mt-4">
+            <input type="text" id="user-chat-input" placeholder="Type your message..." class="flex-1 bg-gray-950 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-teal-500">
+            <button onclick="sendUserChatMessage()" class="bg-teal-600 hover:bg-teal-500 text-gray-950 font-bold px-5 py-2.5 rounded-xl text-sm transition">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var WELCOME_HTML = '<div style="text-align:center;padding:20px 12px;background:rgba(13,148,136,0.05);border:1px solid rgba(13,148,136,0.2);border-radius:12px;margin-bottom:12px;"><div style="width:56px;height:56px;border-radius:50%;background:rgba(13,148,136,0.1);border:1px solid rgba(13,148,136,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;"><i class="fa-solid fa-comments" style="font-size:24px;color:#2dd4bf;"></i></div><h4 style="color:white;font-weight:bold;font-size:16px;margin-bottom:4px;">Welcome to Egocrypto Support</h4><p style="color:#9ca3af;font-size:14px;max-width:300px;margin:0 auto;line-height:1.6;">Select a customer from the dropdown above to view and manage conversations. You can also search by User ID.</p></div>';
+
+function addMessageBubble(msg) {
+    var container = document.getElementById('user-chat-messages');
+    var row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = msg.is_admin ? 'flex-end' : 'flex-start';
+    row.style.width = '100%';
+    row.style.marginBottom = '8px';
+    
+    var bubble = document.createElement('div');
+    bubble.style.maxWidth = '80%';
+    bubble.style.padding = '8px 12px';
+    bubble.style.borderRadius = '12px';
+    bubble.style.background = msg.is_admin ? '#0d9488' : '#374151';
+    bubble.style.color = 'white';
+    bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.2)';
+    bubble.style.wordBreak = 'break-word';
+    
+    var sender = document.createElement('div');
+    sender.style.fontSize = '11px';
+    sender.style.fontWeight = 'bold';
+    sender.style.marginBottom = '4px';
+    sender.style.color = msg.is_admin ? '#ccfbf1' : '#93c5fd';
+    sender.innerText = msg.sender;
+    
+    var message = document.createElement('div');
+    message.style.fontSize = '14px';
+    message.innerText = msg.message;
+    
+    var time = document.createElement('div');
+    time.style.fontSize = '10px';
+    time.style.opacity = '0.7';
+    time.style.marginTop = '4px';
+    time.innerText = msg.created_at;
+    
+    bubble.appendChild(sender);
+    bubble.appendChild(message);
+    bubble.appendChild(time);
+    row.appendChild(bubble);
+    container.appendChild(row);
+}
+
+function loadUserChatMessages() {
+    var container = document.getElementById('user-chat-messages');
+    container.innerHTML = WELCOME_HTML;
+    
+    fetch('/api/chat/messages')
+        .then(function(r) { return r.json(); })
+        .then(function(messages) {
+            if (messages && messages.length > 0) {
+                // Clear welcome and show messages
+                container.innerHTML = '';
+                messages.forEach(function(msg) { addMessageBubble(msg); });
+            }
+            // If no messages, welcome stays
+            container.scrollTop = container.scrollHeight;
+        })
+        .catch(function(err) {
+            console.error(err);
+        });
+}
+
+function sendUserChatMessage() {
+    var input = document.getElementById('user-chat-input');
+    var message = input.value.trim();
+    if (!message) return;
+    
+    fetch('/api/chat/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ message: message })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            input.value = '';
+            loadUserChatMessages();
+        } else {
+            alert(data.message || 'Failed to send message');
+        }
+    })
+    .catch(function(err) {
+        console.error(err);
+    });
+}
+
+loadUserChatMessages();
+setInterval(loadUserChatMessages, 3000);
+</script>
+{% endblock %}

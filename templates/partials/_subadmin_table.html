@@ -1,0 +1,45 @@
+<h4 class="text-sm font-bold text-white mb-3">Sub Admin Management</h4>
+{% if subadmins %}
+<div class="overflow-x-auto">
+    <table class="w-full text-left text-xs">
+        <thead class="bg-gray-950 text-gray-400 uppercase">
+            <tr>
+                <th class="p-3">Sub Admin ID</th>
+                <th class="p-3">Username</th>
+                <th class="p-3">Email</th>
+                <th class="p-3">Referral Code</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Action</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-800">
+            {% for sub in subadmins %}
+            <tr class="hover:bg-gray-800/40">
+                <td class="p-3 text-teal-400 font-bold">{{ sub.id }}</td>
+                <td class="p-3 text-white font-bold">{{ sub.username }}</td>
+                <td class="p-3 text-gray-400">{{ sub.email }}</td>
+                <td class="p-3">
+                    {% for ref in referral_codes %}
+                        {% if ref.admin_id == sub.id %}
+                            <span class="font-mono text-emerald-400 font-bold">{{ ref.code }}</span>
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td class="p-3">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Active</span>
+                </td>
+                <td class="p-3">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="delete_subadmin">
+                        <input type="hidden" name="subadmin_id" value="{{ sub.id }}">
+                        <button type="submit" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white px-3 py-1 rounded-lg text-xs font-bold">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-gray-500 text-sm text-center py-4">No sub admins yet.</p>
+{% endif %}
